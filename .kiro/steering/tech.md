@@ -1,32 +1,38 @@
 # Technology Stack
 
 ## Core Framework
-- **Next.js 15.5.2** with App Router architecture
-- **React 19.1.0** with TypeScript
-- **Turbopack** for fast development and builds
+
+-   **Next.js 15.5.2** with App Router architecture
+-   **React 19.1.0** with TypeScript
+-   **Turbopack** for fast development and builds
 
 ## UI & Styling
-- **Tailwind CSS v4** for styling with CSS variables
-- **shadcn/ui** component library (New York style)
-- **Radix UI** primitives for accessible components
-- **Lucide React** for icons
-- **Geist** fonts (Sans & Mono)
+
+-   **Tailwind CSS v4** for styling with CSS variables
+-   **shadcn/ui** component library (New York style)
+-   **Radix UI** primitives for accessible components
+-   **Lucide React** for icons
+-   **Geist** fonts (Sans & Mono)
+-   **State management in React** will be handled with React Hooks (useState, useContext) for simplicity. No external state management libraries unless absolutely necessary. When necessary, prefer `zustand`
 
 ## Backend & Data
-- **Supabase** for database and authentication
-- **Drizzle ORM** for type-safe database queries
-- **PostgreSQL** as the database
-- **Clerk** for authentication (alternative/additional)
+
+-   **Supabase** for database
+-   **Drizzle ORM** for type-safe database queries
+-   **PostgreSQL** as the database
+-   **Clerk** for authentication, user management and billing support
 
 ## AI & External Services
-- **OpenAI GPT models** for concept generation
-- **Resend** for email services
-- **PostHog** for analytics
+
+-   **OpenAI GPT models** for concept generation
+-   **Resend** for email services
+-   **PostHog** for analytics
 
 ## Development Tools
-- **ESLint** with Next.js and TypeScript configs
-- **pnpm** as package manager
-- **EditorConfig** for consistent formatting
+
+-   **ESLint** with Next.js and TypeScript configs
+-   **pnpm** as package manager
+-   **EditorConfig** for consistent formatting
 
 ## Common Commands
 
@@ -43,6 +49,7 @@ pnpm add <package>    # Add new dependency
 ```
 
 ## Environment Setup
-- Create `.env.local` for environment variables
-- Required: `OPENAI_API_KEY`
-- Additional keys for Supabase, Clerk, etc.
+
+-   Create `.env.local` for environment variables
+-   Required: `OPENAI_API_KEY`
+-   Additional keys for Supabase, Clerk, etc.

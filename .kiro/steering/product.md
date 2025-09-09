@@ -4,10 +4,10 @@
 
 ## Core Features
 
-- **AI-Powered Mind Mapping**: Uses OpenAI's GPT models to generate meaningful conceptual connections
-- **Infinite Exploration**: Dynamic graph interface allowing endless expansion of any node
-- **Visual & Intuitive UI**: Clean, minimalist canvas focused on the creative journey
-- **Save & Resume Sessions**: Cloud-based persistence for brainstorming graphs
+-   **AI-Powered Mind Mapping**: Uses OpenAI's GPT models to generate meaningful conceptual connections
+-   **Infinite Exploration**: Dynamic graph interface allowing endless expansion of any node
+-   **Visual & Intuitive UI**: Clean, minimalist canvas focused on the creative journey
+-   **Save & Resume Sessions**: Cloud-based persistence for brainstorming graphs
 
 ## User Flow
 
@@ -17,7 +17,7 @@
 
 ## Target Use Cases
 
-- Creative brainstorming and ideation
-- Project planning and concept development
-- Educational exploration of topics
-- Business model development and strategic thinking
+-   Creative brainstorming and ideation
+-   Project planning and concept development
+-   Educational exploration of topics
+-   Business model development and strategic thinking
