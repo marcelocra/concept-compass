@@ -8,7 +8,7 @@
     -   Set up environment variable structure for OpenRouter API integration
     -   _Requirements: 3.2, 3.6_
 
--   [ ] 2. Create secure OpenRouter API route
+-   [x] 2. Create secure OpenRouter API route
 
     -   Implement POST endpoint at `src/app/api/generate/route.ts` using Next.js App Router
     -   Add request validation for concept parameter with proper error responses
