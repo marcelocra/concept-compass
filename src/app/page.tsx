@@ -150,9 +150,22 @@ export default function Home() {
                   </div>
                 )}
 
-                <Button type="submit" className="w-full" disabled={isLoading}>
-                  {isLoading ? "Generating..." : "Generate Mind Map"}
-                </Button>
+                <div className="flex gap-2">
+                  <Button type="submit" className="flex-1" disabled={isLoading}>
+                    {isLoading ? "Generating..." : "Generate Mind Map"}
+                  </Button>
+                  {error && (
+                    <Button
+                      data-testid="retry-button"
+                      type="button"
+                      variant="outline"
+                      onClick={handleRetry}
+                      disabled={isLoading}
+                    >
+                      Retry
+                    </Button>
+                  )}
+                </div>
               </form>
 
               <div className="mt-6 text-center text-sm text-muted-foreground">
