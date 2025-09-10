@@ -60,7 +60,7 @@ describe("Home Page Integration Tests", () => {
       fireEvent.click(submitButton);
       
       await waitFor(() => {
-        expect(screen.getByText("Please enter a concept to explore")).toBeInTheDocument();
+        expect(screen.getByTestId("error-message")).toHaveTextContent("Please enter a concept to explore");
       });
       
       expect(mockFetch).not.toHaveBeenCalled();
@@ -76,7 +76,7 @@ describe("Home Page Integration Tests", () => {
       fireEvent.click(submitButton);
       
       await waitFor(() => {
-        expect(screen.getByText("Please enter a concept to explore")).toBeInTheDocument();
+        expect(screen.getByTestId("error-message")).toHaveTextContent("Please enter a concept to explore");
       });
       
       expect(mockFetch).not.toHaveBeenCalled();
@@ -188,7 +188,7 @@ describe("Home Page Integration Tests", () => {
       fireEvent.click(submitButton);
       
       await waitFor(() => {
-        expect(screen.getByText("Network error. Please check your connection and try again.")).toBeInTheDocument();
+        expect(screen.getByTestId("error-message")).toHaveTextContent("Network error. Please check your connection and try again.");
       });
     });
 
@@ -211,7 +211,7 @@ describe("Home Page Integration Tests", () => {
       fireEvent.click(submitButton);
       
       await waitFor(() => {
-        expect(screen.getByText("Internal server error")).toBeInTheDocument();
+        expect(screen.getByTestId("error-message")).toHaveTextContent("Internal server error");
       });
     });
 
@@ -227,7 +227,7 @@ describe("Home Page Integration Tests", () => {
       fireEvent.click(submitButton);
       
       await waitFor(() => {
-        expect(screen.getByText("API rate limit reached. Please wait a moment and try again.")).toBeInTheDocument();
+        expect(screen.getByTestId("error-message")).toHaveTextContent("API rate limit reached. Please wait a moment and try again.");
       });
     });
   });
@@ -276,7 +276,7 @@ describe("Home Page Integration Tests", () => {
     });
 
     it("should provide start over functionality", async () => {
-      const startOverButton = screen.getByRole("button", { name: "Start Over" });
+      const startOverButton = screen.getByTestId("start-over-button");
       fireEvent.click(startOverButton);
       
       await waitFor(() => {
@@ -300,7 +300,7 @@ describe("Home Page Integration Tests", () => {
       fireEvent.click(submitButton);
       
       await waitFor(() => {
-        expect(screen.getByText("An unexpected error occurred. Please try again.")).toBeInTheDocument();
+        expect(screen.getByTestId("error-message")).toHaveTextContent("AI service is temporarily unavailable. Please try again later.");
       });
       
       // Second call succeeds
@@ -313,7 +313,7 @@ describe("Home Page Integration Tests", () => {
       });
       
       // Click retry
-      const retryButton = screen.getByRole("button", { name: "Retry" });
+      const retryButton = screen.getByTestId("retry-button");
       fireEvent.click(retryButton);
       
       await waitFor(() => {

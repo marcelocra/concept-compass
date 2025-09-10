@@ -141,7 +141,14 @@ export default function Home() {
                   />
                 </div>
 
-                {error && <div className="text-sm text-destructive bg-destructive/10 p-3 rounded-md">{error}</div>}
+                {error && (
+                  <div
+                    data-testid="error-message"
+                    className="text-sm text-destructive bg-destructive/10 p-3 rounded-md"
+                  >
+                    {error}
+                  </div>
+                )}
 
                 <Button type="submit" className="w-full" disabled={isLoading}>
                   {isLoading ? "Generating..." : "Generate Mind Map"}
@@ -171,11 +178,11 @@ export default function Home() {
 
             <div className="flex items-center space-x-2">
               {error && (
-                <Button variant="outline" size="sm" onClick={handleRetry}>
+                <Button data-testid="retry-button" variant="outline" size="sm" onClick={handleRetry}>
                   Retry
                 </Button>
               )}
-              <Button variant="outline" size="sm" onClick={handleStartOver}>
+              <Button data-testid="start-over-button" variant="outline" size="sm" onClick={handleStartOver}>
                 Start Over
               </Button>
             </div>
