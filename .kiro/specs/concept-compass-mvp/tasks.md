@@ -29,7 +29,7 @@
     -   Write unit tests for mind map canvas component interactions using Vitest and @testing-library/react
     -   _Requirements: 2.1, 2.2, 2.3, 2.4, 2.5, 4.1, 4.5_
 
--   [ ] 4. Implement main page with input and state management
+-   [x] 4. Implement main page with input and state management
 
     -   Modify `src/app/page.tsx` to include concept input form with submit button
     -   Add state management for current concept, loading, and error states
