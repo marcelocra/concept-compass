@@ -204,7 +204,6 @@ export default function Home() {
           {/* Mind map canvas */}
           <div className="flex-1 p-4">
             <MindMapCanvas
-              concept={currentConcept}
               mindMapData={mindMapData}
               onNodeClick={handleNodeClick}
               isLoading={isLoading}

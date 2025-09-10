@@ -1,18 +1,19 @@
 import React from "react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import "@testing-library/jest-dom";
 import MindMapCanvas, { MindMapData } from "./mind-map-canvas";
 
 // Mock ReactFlow since it requires DOM APIs that aren't available in jsdom
-let mockNodes: any[] = [];
-let mockSetNodes: any = vi.fn();
+type MockNode = { id: string; data: { label: string }; type?: string };
+let mockNodes: MockNode[] = [];
+let mockSetNodes: ReturnType<typeof vi.fn> = vi.fn();
 
 vi.mock("reactflow", () => ({
-  default: ({ children, onNodeClick }: any) => (
+  default: ({ children, onNodeClick }: { children: React.ReactNode; onNodeClick?: (event: React.MouseEvent, node: MockNode) => void }) => (
     <div data-testid="react-flow">
       {children}
-      {mockNodes?.map((node: any) => (
+      {mockNodes?.map((node: MockNode) => (
         <div
           key={node.id}
           data-testid={`node-${node.id}`}
@@ -27,7 +28,7 @@ vi.mock("reactflow", () => ({
   ),
   Controls: () => <div data-testid="react-flow-controls" />,
   Background: () => <div data-testid="react-flow-background" />,
-  useNodesState: (initialNodes: any) => {
+  useNodesState: () => {
     mockSetNodes = vi.fn((newNodes) => {
       if (typeof newNodes === 'function') {
         mockNodes = newNodes(mockNodes);
@@ -37,8 +38,8 @@ vi.mock("reactflow", () => ({
     });
     return [mockNodes, mockSetNodes, vi.fn()];
   },
-  useEdgesState: (initialEdges: any) => {
-    return [initialEdges || [], vi.fn(), vi.fn()];
+  useEdgesState: () => {
+    return [[], vi.fn(), vi.fn()];
   },
   Handle: () => null,
   Position: {
@@ -69,14 +70,14 @@ describe("MindMapCanvas", () => {
   });
 
   it("renders empty state when no mind map data is provided", () => {
-    render(<MindMapCanvas concept="test concept" onNodeClick={mockOnNodeClick} />);
+    render(<MindMapCanvas onNodeClick={mockOnNodeClick} />);
 
     expect(screen.getByText("Enter a concept to generate your mind map")).toBeInTheDocument();
     expect(screen.getByTestId("react-flow")).toBeInTheDocument();
   });
 
   it("renders loading state correctly", () => {
-    render(<MindMapCanvas concept="test concept" onNodeClick={mockOnNodeClick} isLoading={true} />);
+    render(<MindMapCanvas onNodeClick={mockOnNodeClick} isLoading={true} />);
 
     expect(screen.getByText("Generating mind map...")).toBeInTheDocument();
     expect(screen.getByRole("status")).toBeInTheDocument(); // Loading spinner
@@ -85,7 +86,7 @@ describe("MindMapCanvas", () => {
   it("renders error state correctly", () => {
     const errorMessage = "Failed to generate mind map";
 
-    render(<MindMapCanvas concept="test concept" onNodeClick={mockOnNodeClick} error={errorMessage} />);
+    render(<MindMapCanvas onNodeClick={mockOnNodeClick} error={errorMessage} />);
 
     expect(screen.getByText("Error")).toBeInTheDocument();
     expect(screen.getByText(errorMessage)).toBeInTheDocument();
@@ -94,7 +95,7 @@ describe("MindMapCanvas", () => {
   it("renders mind map with central and related nodes", async () => {
     render(
       // TODO(kiro): Looking at MindMapCanvas, it never uses the `concept` prop at all. Review that please.
-      <MindMapCanvas concept="Sustainable Urban Farming" mindMapData={mockMindMapData} onNodeClick={mockOnNodeClick} />
+      <MindMapCanvas mindMapData={mockMindMapData} onNodeClick={mockOnNodeClick} />
     );
 
     // Wait for the component to process the mind map data
@@ -111,7 +112,7 @@ describe("MindMapCanvas", () => {
   it("accepts onNodeClick callback prop", () => {
     // Test that the component accepts the onNodeClick prop without errors
     render(
-      <MindMapCanvas concept="Sustainable Urban Farming" mindMapData={mockMindMapData} onNodeClick={mockOnNodeClick} />
+      <MindMapCanvas mindMapData={mockMindMapData} onNodeClick={mockOnNodeClick} />
     );
 
     expect(screen.getByTestId("react-flow")).toBeInTheDocument();
@@ -123,7 +124,7 @@ describe("MindMapCanvas", () => {
     // Test that the component has the proper logic for handling node clicks
     // This tests the component structure rather than the actual clicking
     render(
-      <MindMapCanvas concept="Sustainable Urban Farming" mindMapData={mockMindMapData} onNodeClick={mockOnNodeClick} />
+      <MindMapCanvas mindMapData={mockMindMapData} onNodeClick={mockOnNodeClick} />
     );
 
     expect(screen.getByTestId("react-flow")).toBeInTheDocument();
@@ -134,7 +135,7 @@ describe("MindMapCanvas", () => {
 
   it("updates nodes and edges when mindMapData changes", async () => {
     const { rerender } = render(
-      <MindMapCanvas concept="Initial Concept" mindMapData={mockMindMapData} onNodeClick={mockOnNodeClick} />
+      <MindMapCanvas mindMapData={mockMindMapData} onNodeClick={mockOnNodeClick} />
     );
 
     await waitFor(() => {
@@ -147,7 +148,7 @@ describe("MindMapCanvas", () => {
       relatedConcepts: ["Solar Power", "Wind Energy", "Hydroelectric"],
     };
 
-    rerender(<MindMapCanvas concept="Renewable Energy" mindMapData={newMindMapData} onNodeClick={mockOnNodeClick} />);
+    rerender(<MindMapCanvas mindMapData={newMindMapData} onNodeClick={mockOnNodeClick} />);
 
     // The component should re-render with new data
     await waitFor(() => {
@@ -161,27 +162,27 @@ describe("MindMapCanvas", () => {
       relatedConcepts: [],
     };
 
-    render(<MindMapCanvas concept="Test Concept" mindMapData={incompleteMindMapData} onNodeClick={mockOnNodeClick} />);
+    render(<MindMapCanvas mindMapData={incompleteMindMapData} onNodeClick={mockOnNodeClick} />);
 
     expect(screen.getByTestId("react-flow")).toBeInTheDocument();
   });
 
   it("applies correct CSS classes for styling", () => {
-    render(<MindMapCanvas concept="test concept" onNodeClick={mockOnNodeClick} />);
+    render(<MindMapCanvas onNodeClick={mockOnNodeClick} />);
 
     const container = screen.getByTestId("react-flow").parentElement;
     expect(container).toHaveClass("relative", "w-full", "h-full", "min-h-[600px]");
   });
 
   it("shows loading overlay with correct z-index", () => {
-    render(<MindMapCanvas concept="test concept" onNodeClick={mockOnNodeClick} isLoading={true} />);
+    render(<MindMapCanvas onNodeClick={mockOnNodeClick} isLoading={true} />);
 
     const loadingOverlay = screen.getByText("Generating mind map...").parentElement?.parentElement;
     expect(loadingOverlay).toHaveClass("z-10");
   });
 
   it("shows error overlay with correct styling", () => {
-    render(<MindMapCanvas concept="test concept" onNodeClick={mockOnNodeClick} error="Test error message" />);
+    render(<MindMapCanvas onNodeClick={mockOnNodeClick} error="Test error message" />);
 
     const errorOverlay = screen.getByText("Test error message").closest(".absolute");
     expect(errorOverlay).toHaveClass("z-10");

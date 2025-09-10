@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useCallback, useEffect, useMemo } from "react";
+import React, { useCallback, useEffect, useMemo, memo } from "react";
 import ReactFlow, {
   Node,
   Edge,
@@ -16,7 +16,7 @@ import ReactFlow, {
 import { cn } from "@/lib/utils";
 
 // Custom node component for central concept
-const CentralNode = ({ data, selected }: NodeProps) => {
+const CentralNode = memo(({ data, selected }: NodeProps) => {
   return (
     <div
       className={cn(
@@ -33,10 +33,11 @@ const CentralNode = ({ data, selected }: NodeProps) => {
       <Handle type="source" position={Position.Left} className="opacity-0" />
     </div>
   );
-};
+});
+CentralNode.displayName = "CentralNode";
 
 // Custom node component for related concepts
-const RelatedNode = ({ data, selected }: NodeProps) => {
+const RelatedNode = memo(({ data, selected }: NodeProps) => {
   return (
     <div
       className={cn(
@@ -54,7 +55,8 @@ const RelatedNode = ({ data, selected }: NodeProps) => {
       <Handle type="target" position={Position.Left} className="opacity-0" />
     </div>
   );
-};
+});
+RelatedNode.displayName = "RelatedNode";
 
 // Node types configuration
 const nodeTypes: NodeTypes = {
@@ -68,15 +70,13 @@ export interface MindMapData {
 }
 
 export interface MindMapCanvasProps {
-  concept: string;
-  mindMapData?: MindMapData;
+  mindMapData?: MindMapData | null;
   onNodeClick: (concept: string) => void;
   isLoading?: boolean;
   error?: string | null;
 }
 
-export default function MindMapCanvas({
-  concept,
+const MindMapCanvas = memo(function MindMapCanvas({
   mindMapData,
   onNodeClick,
   isLoading = false,
@@ -233,4 +233,6 @@ export default function MindMapCanvas({
       )}
     </div>
   );
-}
+});
+
+export default MindMapCanvas;

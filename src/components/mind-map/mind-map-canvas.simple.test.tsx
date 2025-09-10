@@ -6,7 +6,7 @@ import "@testing-library/jest-dom";
 // Mock ReactFlow completely to avoid CSS issues
 vi.mock("reactflow", () => ({
   __esModule: true,
-  default: ({ children }: any) => (
+  default: ({ children }: { children: React.ReactNode }) => (
     <div data-testid="react-flow-mock">
       {children}
       <div data-testid="mock-canvas">ReactFlow Canvas</div>
@@ -35,19 +35,19 @@ describe("MindMapCanvas - Simple Tests", () => {
   });
 
   it("renders without crashing", () => {
-    render(<MindMapCanvas concept="test concept" onNodeClick={mockOnNodeClick} />);
+    render(<MindMapCanvas onNodeClick={mockOnNodeClick} />);
 
     expect(screen.getByTestId("react-flow-mock")).toBeInTheDocument();
   });
 
   it("shows empty state when no data provided", () => {
-    render(<MindMapCanvas concept="test concept" onNodeClick={mockOnNodeClick} />);
+    render(<MindMapCanvas onNodeClick={mockOnNodeClick} />);
 
     expect(screen.getByText("Enter a concept to generate your mind map")).toBeInTheDocument();
   });
 
   it("shows loading state", () => {
-    render(<MindMapCanvas concept="test concept" onNodeClick={mockOnNodeClick} isLoading={true} />);
+    render(<MindMapCanvas onNodeClick={mockOnNodeClick} isLoading={true} />);
 
     expect(screen.getByText("Generating mind map...")).toBeInTheDocument();
   });
@@ -55,7 +55,7 @@ describe("MindMapCanvas - Simple Tests", () => {
   it("shows error state", () => {
     const errorMessage = "Test error";
 
-    render(<MindMapCanvas concept="test concept" onNodeClick={mockOnNodeClick} error={errorMessage} />);
+    render(<MindMapCanvas onNodeClick={mockOnNodeClick} error={errorMessage} />);
 
     expect(screen.getByText("Error")).toBeInTheDocument();
     expect(screen.getByText(errorMessage)).toBeInTheDocument();
@@ -67,7 +67,7 @@ describe("MindMapCanvas - Simple Tests", () => {
       relatedConcepts: ["Related 1", "Related 2"],
     };
 
-    render(<MindMapCanvas concept="test concept" mindMapData={mockData} onNodeClick={mockOnNodeClick} />);
+    render(<MindMapCanvas mindMapData={mockData} onNodeClick={mockOnNodeClick} />);
 
     // Component should render without errors when data is provided
     expect(screen.getByTestId("react-flow-mock")).toBeInTheDocument();

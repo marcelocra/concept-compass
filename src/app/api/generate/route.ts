@@ -21,8 +21,12 @@ interface OpenRouterResponse {
 function sanitizeConcept(concept: string): string {
   return concept
     .trim()
-    .slice(0, 100) // Limit length
-    .replace(/[<>]/g, ""); // Basic XSS prevention
+    .slice(0, 100) // Limit length to prevent excessive API costs
+    .replace(/[<>'"&`]/g, "") // Enhanced XSS prevention
+    .replace(/javascript:/gi, "") // Remove javascript: protocol
+    .replace(/on\w+=/gi, "") // Remove event handlers like onclick=
+    .replace(/data:/gi, "") // Remove data: protocol
+    .replace(/[^\w\s\-.,()]/g, ""); // Allow only safe characters
 }
 
 function generatePrompt(concept: string): string {
@@ -43,19 +47,29 @@ Example for "Sustainable Urban Farming":
 
 export async function POST(request: NextRequest): Promise<NextResponse<GenerateResponse>> {
   try {
+    // Check content length to prevent oversized requests (if header is available)
+    const contentLength = request.headers.get('content-length');
+    if (contentLength && parseInt(contentLength) > 1024) { // 1KB limit
+      return NextResponse.json(
+        { success: false, error: "Request too large" },
+        { status: 413 }
+      );
+    }
+
     // Validate environment variables
     const apiKey = process.env.OPENROUTER_API_KEY;
     if (!apiKey) {
       console.error("OPENROUTER_API_KEY environment variable is not set");
-      return NextResponse.json({ success: false, error: "API configuration error" }, { status: 500 });
+      return NextResponse.json({ success: false, error: "Service configuration error" }, { status: 500 });
     }
 
     // Parse and validate request body
     let body: GenerateRequest;
     try {
       body = await request.json();
-    } catch (error) {
-      return NextResponse.json({ success: false, error: "Invalid JSON in request body" }, { status: 400 });
+    } catch (parseError) {
+      console.error("JSON parsing error:", parseError instanceof Error ? parseError.message : 'Unknown error');
+      return NextResponse.json({ success: false, error: "Invalid request format" }, { status: 400 });
     }
 
     // Validate concept parameter
@@ -117,10 +131,11 @@ export async function POST(request: NextRequest): Promise<NextResponse<GenerateR
       }
 
       if (openRouterResponse.status === 401) {
-        return NextResponse.json({ success: false, error: "API authentication failed" }, { status: 500 });
+        console.error("OpenRouter authentication failed");
+        return NextResponse.json({ success: false, error: "Service authentication failed" }, { status: 500 });
       }
 
-      return NextResponse.json({ success: false, error: "AI service temporarily unavailable" }, { status: 500 });
+      return NextResponse.json({ success: false, error: "AI service temporarily unavailable" }, { status: 502 });
     }
 
     const openRouterData: OpenRouterResponse = await openRouterResponse.json();

@@ -113,7 +113,7 @@ describe("Home Page Integration Tests", () => {
     });
 
     it("should show loading state during API call", async () => {
-      let resolvePromise: (value: any) => void;
+      let resolvePromise: (value: unknown) => void;
       const promise = new Promise((resolve) => {
         resolvePromise = resolve;
       });
