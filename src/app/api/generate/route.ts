@@ -85,7 +85,6 @@ export async function POST(request: NextRequest): Promise<NextResponse<GenerateR
         Authorization: `Bearer ${apiKey}`,
         "Content-Type": "application/json",
         "HTTP-Referer": process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000",
-        // TODO(kiro): What is this? Why it is necessary?
         "X-Title": "Concept Compass MVP",
       },
       body: JSON.stringify({
