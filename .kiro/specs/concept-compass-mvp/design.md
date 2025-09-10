@@ -61,6 +61,8 @@ src/
 │       └── mind-map-canvas.tsx    # React Flow component (to be created)
 └── lib/
     └── utils.ts                   # Utilities (existing)
+.env.example                       # Example environment variables (to be created)
+
 ```
 
 ## Components and Interfaces
@@ -248,8 +250,10 @@ interface ErrorDisplayProps {
 
 ### Testing Tools
 
--   **Jest**: Unit testing framework
--   **React Testing Library**: Component testing
+-   **Vitest**: Unit and component testing framework
+-   **@testing-library/react**: Component testing utilities
+-   **jsdom**: DOM environment for testing
+-   **@vitest/ui**: Interactive UI for Vitest
 -   **MSW (Mock Service Worker)**: API mocking
 -   **Playwright**: E2E testing (optional for MVP)
 
@@ -364,15 +368,29 @@ const nodeStyles = {
 
 ### OpenAI API Integration
 
-**Model Selection**: GPT-3.5-turbo or GPT-4 (configurable)
+**API Provider**: OpenRouter.ai (This is the endpoint we will call)
+
+**Model Selection**:
+
+-   **Development/Low Latency**: `gpt-oss-20b`
+-   **Production/High Reasoning**: `gpt-oss-120b` (Primary target for the hackathon)
+
 **Prompt Engineering**:
 
 ```typescript
 const generatePrompt = (concept: string) => `
-Generate 6 related concepts for "${concept}".
-Return only a JSON array of strings, no explanations.
-Focus on diverse, creative connections.
-Example: ["concept1", "concept2", "concept3", "concept4", "concept5", "concept6"]
+Generate a list of 5 to 7 diverse concepts related to "${concept}".
+Return ONLY a valid JSON array of strings in your response, with no other text, explanations, or markdown.
+
+For the concept list, provide a mix of the following categories:
+- A core component or principle.
+- A practical application or use case.
+- A potential challenge or consideration.
+- A related technology or tool.
+- A surprising or "out-of-the-box" connection.
+
+Example for "Sustainable Urban Farming":
+["Vertical Farming", "Community Supported Agriculture (CSA)", "Water Scarcity", "IoT Soil Sensors", "Mycoremediation"]
 `;
 ```
 
@@ -401,6 +419,14 @@ import "reactflow/dist/style.css";
 ## Deployment Considerations
 
 ### Environment Setup
+
+-   A `.env.example` file will be created to document required variables.
+-   Create a `.env.local` file by copying `.env.example` for local development.
+
+```bash
+# .env.example
+OPENAI_API_KEY=""
+```
 
 ```bash
 # .env.local
