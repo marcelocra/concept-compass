@@ -15,7 +15,7 @@ graph TB
     A[User Browser] --> B[Next.js Frontend]
     B --> C[React Flow Canvas]
     B --> D[API Route /api/generate]
-    D --> E[OpenAI API]
+    D --> E[OpenRouter API]
 
     subgraph "Client-Side (Stateless)"
         B
@@ -383,6 +383,7 @@ Generate a list of 5 to 7 diverse concepts related to "${concept}".
 Return ONLY a valid JSON array of strings in your response, with no other text, explanations, or markdown.
 
 For the concept list, provide a mix of the following categories:
+
 - A core component or principle.
 - A practical application or use case.
 - A potential challenge or consideration.
@@ -425,12 +426,9 @@ import "reactflow/dist/style.css";
 
 ```bash
 # .env.example
-OPENAI_API_KEY=""
-```
-
-```bash
-# .env.local
-OPENAI_API_KEY=sk-...
+OPENROUTER_API_KEY=""
+# Optional: The model name can also be an environment variable
+OPENROUTER_MODEL="gpt-oss-120b"
 ```
 
 ### Build Configuration
