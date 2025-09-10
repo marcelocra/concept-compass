@@ -53,3 +53,15 @@ pnpm add <package>    # Add new dependency
 -   Create `.env.local` for environment variables
 -   Required: `OPENAI_API_KEY`
 -   Additional keys for Supabase, Clerk, etc.
+
+## AI Collaboration Workflow
+
+**Critical Instruction:** This project is developed within a containerized environment to which you do not have direct shell access.
+
+Therefore, you **must not** attempt to execute any shell commands (e.g., `pnpm install`, `cp ...`, etc.). Instead, for any task that requires a command, your primary function is to provide the exact, copy-pasteable command as a code block in your response. I am responsible for executing it.
+
+## Good Coding Practice
+
+1. Code comments:
+    1. Document your code with comments unless it is absolutely obvious (most code isn't).
+    2. Explain what or why something exists, do NOT describe it: if a class is named User, do NOT comment `The user class.`. Document what is particular about it, if there's anything. For example, `Follows the Firebase definition of a user. Details here: ...`.
