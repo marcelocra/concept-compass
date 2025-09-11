@@ -381,24 +381,34 @@ export default function MindMapCanvas({
         </div>
       )}
 
-      {/* Enhanced error overlay */}
+      {/* Friendly error overlay */}
       {error && (
         <div className="absolute inset-0 bg-background/95 backdrop-blur-lg flex items-center justify-center z-20 p-6">
-          <Card className="p-8 bg-gradient-to-br from-destructive/10 to-destructive/5 border-destructive/20 shadow-2xl max-w-md mx-4">
-            <div className="text-center space-y-4">
-              <div className="w-16 h-16 mx-auto bg-gradient-to-br from-destructive/20 to-destructive/10 rounded-full flex items-center justify-center">
-                <svg className="w-8 h-8 text-destructive" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <Card className="p-8 bg-gradient-to-br from-muted/20 to-muted/10 border-border/40 shadow-2xl max-w-lg mx-4 relative overflow-hidden">
+            {/* Subtle animated background */}
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-primary/5 to-transparent animate-pulse" />
+
+            <div className="relative text-center space-y-6">
+              {/* Friendly icon instead of warning */}
+              <div className="w-16 h-16 mx-auto bg-gradient-to-br from-primary/20 to-accent/20 rounded-full flex items-center justify-center">
+                <svg className="w-8 h-8 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
                     strokeWidth={2}
-                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4.5c-.77-.833-2.694-.833-3.464 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z"
+                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
                   />
                 </svg>
               </div>
-              <div>
-                <h3 className="font-bold text-lg text-destructive">Connection Lost</h3>
-                <p className="text-sm text-muted-foreground mt-2 leading-relaxed">{error}</p>
+
+              <div className="space-y-3">
+                <h3 className="font-semibold text-xl text-foreground">Let's try that again</h3>
+                <p className="text-muted-foreground leading-relaxed">{error}</p>
+              </div>
+
+              {/* Encouraging message */}
+              <div className="text-sm text-muted-foreground/80 bg-muted/30 rounded-lg p-3">
+                💡 Try a different concept or rephrase your idea
               </div>
             </div>
           </Card>

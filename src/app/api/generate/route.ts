@@ -85,6 +85,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<GenerateR
     // Retry logic with exponential backoff
     const maxRetries = 2;
     let openRouterResponse: Response | null = null;
+    let openRouterData: OpenRouterResponse | null = null;
     let lastError: Error | null = null;
 
     for (let attempt = 0; attempt <= maxRetries; attempt++) {
@@ -130,10 +131,35 @@ export async function POST(request: NextRequest): Promise<NextResponse<GenerateR
 
           clearTimeout(timeoutId);
 
-          // If we get a response, break out of retry loop
+          // If we get a response, validate the content before breaking
           if (openRouterResponse.ok) {
-            console.log(`OpenRouter API succeeded on attempt ${attempt + 1}`);
-            break;
+            // Parse and validate the response content
+            try {
+              const responseData: OpenRouterResponse = await openRouterResponse.json();
+
+              if (!responseData.choices || responseData.choices.length === 0) {
+                console.warn(`OpenRouter API returned no choices on attempt ${attempt + 1}`);
+                lastError = new Error("No choices in API response");
+                continue; // Retry
+              }
+
+              const responseContent = responseData.choices[0].message.content;
+
+              if (!responseContent || responseContent.trim() === "") {
+                console.warn(`OpenRouter API returned empty content on attempt ${attempt + 1}`);
+                lastError = new Error("Empty content in API response");
+                continue; // Retry
+              }
+
+              // Content looks good, store the data and break out of retry loop
+              openRouterData = responseData;
+              console.log(`OpenRouter API succeeded with valid content on attempt ${attempt + 1}`);
+              break;
+            } catch (parseError) {
+              console.warn(`Failed to parse OpenRouter response on attempt ${attempt + 1}:`, parseError);
+              lastError = new Error("Failed to parse API response");
+              continue; // Retry
+            }
           } else {
             // Handle specific HTTP errors
             const errorText = await openRouterResponse.text();
@@ -197,23 +223,16 @@ export async function POST(request: NextRequest): Promise<NextResponse<GenerateR
       );
     }
 
-    const openRouterData: OpenRouterResponse = await openRouterResponse.json();
-
-    if (!openRouterData.choices || openRouterData.choices.length === 0) {
-      console.error("OpenRouter API returned no choices");
-      return NextResponse.json({ success: false, error: "No response from AI service" }, { status: 500 });
-    }
-
-    const content = openRouterData.choices[0].message.content;
-
-    // Check if content is empty or null
-    if (!content || content.trim() === "") {
-      console.error("OpenRouter API returned empty content");
+    // Use the data we already parsed and validated in the retry loop
+    if (!openRouterData) {
+      console.error("No valid response data after retries");
       return NextResponse.json(
-        { success: false, error: "AI service returned empty response. Please try again." },
+        { success: false, error: "AI service failed to provide valid response after retries." },
         { status: 500 }
       );
     }
+
+    const content = openRouterData.choices[0].message.content;
 
     // Parse the JSON response from the AI
     let concepts: string[];
@@ -236,14 +255,10 @@ export async function POST(request: NextRequest): Promise<NextResponse<GenerateR
         throw new Error("AI returned empty array");
       }
 
-      // Ensure we have 5-8 concepts as specified, but be flexible
+      // Ensure we have reasonable number of concepts
       if (concepts.length < 3) {
-        console.warn(`AI returned only ${concepts.length} concepts, padding with generic ones`);
-        // Add some generic related concepts if we get too few
-        const genericConcepts = ["Related Topic", "Connected Idea", "Associated Concept"];
-        while (concepts.length < 5 && genericConcepts.length > 0) {
-          concepts.push(genericConcepts.shift()!);
-        }
+        console.warn(`AI returned only ${concepts.length} concepts, which is too few`);
+        throw new Error("AI returned insufficient concepts");
       } else if (concepts.length > 8) {
         console.warn(`AI returned ${concepts.length} concepts, trimming to 8`);
         concepts = concepts.slice(0, 8);
@@ -254,23 +269,13 @@ export async function POST(request: NextRequest): Promise<NextResponse<GenerateR
         error: parseError,
       });
 
-      // Try to provide a fallback response with generic concepts
-      const fallbackConcepts = [
-        "Related Concept 1",
-        "Connected Idea",
-        "Associated Topic",
-        "Similar Theme",
-        "Linked Subject",
-      ];
-
-      console.warn("Using fallback concepts due to AI parsing error");
+      // Return a user-friendly error instead of fallback concepts
       return NextResponse.json(
         {
-          success: true,
-          concepts: fallbackConcepts,
-          warning: "AI response was malformed, using fallback concepts",
+          success: false,
+          error: "The AI had trouble understanding your concept. Please try rephrasing it or try a different concept.",
         },
-        { status: 200 }
+        { status: 500 }
       );
     }
 
