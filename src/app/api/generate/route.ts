@@ -54,7 +54,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<GenerateR
     let body: GenerateRequest;
     try {
       body = await request.json();
-    } catch (_error) {
+    } catch {
       return NextResponse.json({ success: false, error: "Invalid JSON in request body" }, { status: 400 });
     }
 
