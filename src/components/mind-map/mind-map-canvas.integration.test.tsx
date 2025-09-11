@@ -1,3 +1,4 @@
+import React from "react";
 import { describe, it, expect, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import "@testing-library/jest-dom";
@@ -5,7 +6,7 @@ import MindMapCanvas from "./mind-map-canvas";
 
 // Mock ReactFlow for integration testing
 vi.mock("reactflow", () => ({
-  default: ({ children }: any) => (
+  default: ({ children }: { children: React.ReactNode }) => (
     <div data-testid="react-flow-integration">
       {children}
       <div data-testid="mock-canvas">ReactFlow Canvas</div>
@@ -28,7 +29,7 @@ describe("MindMapCanvas Integration", () => {
   it("integrates correctly with project structure and styling", () => {
     const mockOnNodeClick = vi.fn();
 
-    render(<MindMapCanvas concept="Integration Test" onNodeClick={mockOnNodeClick} />);
+    render(<MindMapCanvas onNodeClick={mockOnNodeClick} />);
 
     // Verify the component renders without errors
     expect(screen.getByTestId("react-flow-integration")).toBeInTheDocument();
@@ -40,7 +41,7 @@ describe("MindMapCanvas Integration", () => {
   it("uses Tailwind CSS classes correctly", () => {
     const mockOnNodeClick = vi.fn();
 
-    render(<MindMapCanvas concept="Styling Test" onNodeClick={mockOnNodeClick} />);
+    render(<MindMapCanvas onNodeClick={mockOnNodeClick} />);
 
     // Check that the main container has the expected Tailwind classes
     const container = screen.getByTestId("react-flow-integration").parentElement;
