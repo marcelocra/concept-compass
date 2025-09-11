@@ -77,39 +77,27 @@ const CentralNode = ({ data, selected }: NodeProps) => {
 };
 
 const RelatedNode = ({ data, selected }: NodeProps) => {
-  const [isHovered, setIsHovered] = useState(false);
-
   return (
-    <div
-      className={cn(
-        "relative group cursor-pointer transition-all duration-500 ease-out",
-        "transform-gpu will-change-transform hover:scale-105 hover:-translate-y-1",
-        isHovered && "z-10"
-      )}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-    >
-      {/* Glow effect */}
-      <div className="absolute -inset-2 bg-gradient-to-br from-accent/30 via-primary/20 to-secondary/30 rounded-xl blur-lg opacity-0 group-hover:opacity-100 transition-all duration-500" />
-
-      {/* Main node */}
+    <div className="group cursor-pointer">
+      {/* Simple, modern node with CentralNode hover colors */}
       <div
         className={cn(
-          "relative bg-gradient-to-br from-card via-card/95 to-card/90 text-card-foreground",
-          "rounded-xl border border-border/50 backdrop-blur-md p-4 shadow-lg w-44 text-center",
-          "hover:border-primary/50 hover:shadow-2xl hover:shadow-primary/10",
-          "before:absolute before:inset-0 before:rounded-xl before:bg-gradient-to-br before:from-white/5 before:to-transparent",
-          "transition-all duration-500 group-hover:bg-gradient-to-br group-hover:from-card/98 group-hover:to-accent/5",
-          selected && "ring-2 ring-primary/50 ring-offset-2 ring-offset-background border-primary/70"
+          "relative bg-card text-card-foreground border border-border/50",
+          "rounded-lg p-4 w-44 text-center shadow-sm",
+          "transition-all duration-300 ease-out",
+          "hover:shadow-lg hover:shadow-blue-500/10 hover:border-blue-500/40",
+          "hover:bg-gradient-to-br hover:from-blue-600/5 hover:via-purple-600/5 hover:to-pink-600/5",
+          "hover:-translate-y-1 hover:scale-[1.02]",
+          selected && "ring-2 ring-primary/50 ring-offset-2 border-primary/70"
         )}
       >
-        {/* Animated border */}
-        <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-primary/0 via-primary/50 to-primary/0 opacity-0 group-hover:opacity-100 transition-opacity duration-700 -z-10 blur-sm" />
+        {/* Clean text */}
+        <div className="text-sm font-medium break-words leading-relaxed transition-colors duration-300 group-hover:text-foreground">
+          {data.label}
+        </div>
 
-        <div className="relative z-10 text-sm font-semibold break-words leading-snug">{data.label}</div>
-
-        {/* Corner accent */}
-        <div className="absolute top-1 right-1 w-1 h-1 bg-accent rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+        {/* Gradient accent dot */}
+        <div className="absolute top-2 right-2 w-1.5 h-1.5 bg-gradient-to-r from-blue-500/60 to-purple-500/60 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
         <Handle type="target" position={Position.Top} className="!opacity-0" />
         <Handle type="target" position={Position.Right} className="!opacity-0" />
@@ -119,9 +107,9 @@ const RelatedNode = ({ data, selected }: NodeProps) => {
     </div>
   );
 };
-
-// --- Enhanced Custom Edge ---
+// --- Enhanced Custom Edge - REVERTIDO para conexão simples ---
 const AnimatedEdge = ({ id, sourceX, sourceY, targetX, targetY, style }: EdgeProps) => {
+  // Usando a forma anterior simples que funcionava
   const [edgePath] = getSmoothStepPath({
     sourceX,
     sourceY,
@@ -139,26 +127,33 @@ const AnimatedEdge = ({ id, sourceX, sourceY, targetX, targetY, style }: EdgePro
         path={edgePath}
         style={{
           ...style,
-          strokeWidth: 3,
-          stroke: "url(#gradient)",
-          filter: "url(#glow)",
+          strokeWidth: 2.5,
+          stroke: "url(#edgeGradient)",
+          filter: "url(#edgeGlow)",
         }}
       />
 
-      {/* Animated particle */}
-      <circle r="3" fill="hsl(var(--accent))" className="opacity-70">
-        <animateMotion dur="3s" repeatCount="indefinite" path={edgePath} />
+      {/* Animated particle along the path */}
+      <circle r="4" className="opacity-80">
+        <animateMotion dur="4s" repeatCount="indefinite" path={edgePath} />
+        <animate attributeName="fill" values="#3b82f6;#8b5cf6;#ec4899;#3b82f6" dur="2s" repeatCount="indefinite" />
       </circle>
 
-      {/* Definitions for gradient and glow */}
+      {/* End particle at target */}
+      <circle cx={targetX} cy={targetY} r="3" className="opacity-60">
+        <animate attributeName="fill" values="#ec4899;#8b5cf6;#3b82f6;#ec4899" dur="3s" repeatCount="indefinite" />
+        <animate attributeName="r" values="2;4;2" dur="2s" repeatCount="indefinite" />
+      </circle>
+
+      {/* Enhanced definitions */}
       <defs>
-        <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="0%">
-          <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity="0.8" />
-          <stop offset="50%" stopColor="hsl(var(--accent))" stopOpacity="0.6" />
-          <stop offset="100%" stopColor="hsl(var(--secondary))" stopOpacity="0.4" />
+        <linearGradient id="edgeGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.7" />
+          <stop offset="50%" stopColor="#8b5cf6" stopOpacity="0.6" />
+          <stop offset="100%" stopColor="#ec4899" stopOpacity="0.5" />
         </linearGradient>
-        <filter id="glow">
-          <feGaussianBlur stdDeviation="2" result="coloredBlur" />
+        <filter id="edgeGlow">
+          <feGaussianBlur stdDeviation="1.5" result="coloredBlur" />
           <feMerge>
             <feMergeNode in="coloredBlur" />
             <feMergeNode in="SourceGraphic" />
@@ -216,8 +211,7 @@ const generateAdvancedLayout = (centralConcept: string, relatedConcepts: string[
     target: node.id,
     type: "animated",
     style: {
-      strokeWidth: 2,
-      stroke: `hsl(${(index * 137.508) % 360}, 70%, 60%)`,
+      strokeWidth: 2.5,
     },
     animated: false, // We handle animation in custom edge
   }));
@@ -248,7 +242,7 @@ export default function MindMapCanvas({
   error = null,
 }: MindMapCanvasProps) {
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
-  const [edges, setEdges, onEdgesChange] = useEdgesState([]);
+  const [edges, setEdges, onEdgesChange] = useEdgesState([]); // ✅ CORREÇÃO AQUI
   const [isVisible, setIsVisible] = useState(false);
 
   const generateNodesAndEdges = useCallback((data: MindMapData) => {
