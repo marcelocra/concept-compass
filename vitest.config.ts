@@ -7,6 +7,13 @@ export default defineConfig({
     setupFiles: ["./src/test/setup.ts"],
     globals: true,
     css: true,
+    // Exclude Next.js build files from tests
+    exclude: [
+      "**/node_modules/**",
+      "**/.next/**",
+      "**/dist/**",
+      "**/build/**",
+    ],
   },
   resolve: {
     alias: {

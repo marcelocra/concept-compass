@@ -1,6 +1,20 @@
 import { vi } from "vitest";
 import "@testing-library/jest-dom";
 
+// Mock Next.js router
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({
+    push: vi.fn(),
+    replace: vi.fn(),
+    prefetch: vi.fn(),
+    back: vi.fn(),
+    forward: vi.fn(),
+    refresh: vi.fn(),
+  }),
+  useSearchParams: () => new URLSearchParams(),
+  usePathname: () => "/",
+}));
+
 // Mock CSS imports
 Object.defineProperty(window, "matchMedia", {
   writable: true,
@@ -37,3 +51,17 @@ global.DOMRect = {
     toJSON: () => {},
   }),
 };
+
+// Mock window.innerWidth for responsive tests
+Object.defineProperty(window, 'innerWidth', {
+  writable: true,
+  configurable: true,
+  value: 1024,
+});
+
+// Mock window.innerHeight for responsive tests
+Object.defineProperty(window, 'innerHeight', {
+  writable: true,
+  configurable: true,
+  value: 768,
+});
