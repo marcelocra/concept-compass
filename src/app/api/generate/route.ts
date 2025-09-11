@@ -26,19 +26,23 @@ function sanitizeConcept(concept: string): string {
 }
 
 function generatePrompt(concept: string): string {
-  return `Generate a list of 5 to 7 diverse concepts related to "${concept}".
-Return ONLY a valid JSON array of strings in your response, with no other text, explanations, or markdown.
+  return `Generate exactly 5 to 7 diverse concepts related to "${concept}".
 
-For the concept list, provide a mix of the following categories:
+CRITICAL: Your response must be ONLY a valid JSON array of strings. No explanations, no markdown, no additional text.
 
-- A core component or principle.
-- A practical application or use case.
-- A potential challenge or consideration.
-- A related technology or tool.
-- A surprising or "out-of-the-box" connection.
+Format: ["Concept 1", "Concept 2", "Concept 3", "Concept 4", "Concept 5"]
+
+For the concept list, provide a mix of:
+- A core component or principle
+- A practical application or use case  
+- A potential challenge or consideration
+- A related technology or tool
+- A surprising or "out-of-the-box" connection
 
 Example for "Sustainable Urban Farming":
-["Vertical Farming", "Community Supported Agriculture (CSA)", "Water Scarcity", "IoT Soil Sensors", "Mycoremediation"]`;
+["Vertical Farming", "Community Supported Agriculture", "Water Scarcity", "IoT Soil Sensors", "Mycoremediation"]
+
+Now generate for "${concept}":`;
 }
 
 export async function POST(request: NextRequest): Promise<NextResponse<GenerateResponse>> {
@@ -78,27 +82,46 @@ export async function POST(request: NextRequest): Promise<NextResponse<GenerateR
     const model =
       process.env.NODE_ENV === "production" ? process.env.OPENROUTER_MODEL || "gpt-oss-120b" : "gpt-oss-20b";
 
-    // Make OpenRouter API call
-    const openRouterResponse = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
-        "HTTP-Referer": process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000",
-        "X-Title": "Concept Compass MVP",
-      },
-      body: JSON.stringify({
-        model: model,
-        messages: [
-          {
-            role: "user",
-            content: generatePrompt(sanitizedConcept),
-          },
-        ],
-        temperature: 0.7,
-        max_tokens: 500,
-      }),
-    });
+    // Make OpenRouter API call with timeout
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+
+    let openRouterResponse: Response;
+    try {
+      openRouterResponse = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          "Content-Type": "application/json",
+          "HTTP-Referer": process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000",
+          "X-Title": "Concept Compass MVP",
+        },
+        body: JSON.stringify({
+          model: model,
+          messages: [
+            {
+              role: "user",
+              content: generatePrompt(sanitizedConcept),
+            },
+          ],
+          temperature: 0.7,
+          max_tokens: 500,
+        }),
+        signal: controller.signal,
+      });
+    } catch (fetchError) {
+      clearTimeout(timeoutId);
+      if (fetchError instanceof Error && fetchError.name === 'AbortError') {
+        console.error("OpenRouter API request timed out");
+        return NextResponse.json(
+          { success: false, error: "AI service is taking too long to respond. Please try again." },
+          { status: 504 }
+        );
+      }
+      throw fetchError; // Re-throw other fetch errors
+    } finally {
+      clearTimeout(timeoutId);
+    }
 
     if (!openRouterResponse.ok) {
       const errorText = await openRouterResponse.text();
@@ -132,26 +155,66 @@ export async function POST(request: NextRequest): Promise<NextResponse<GenerateR
 
     const content = openRouterData.choices[0].message.content;
 
+    // Check if content is empty or null
+    if (!content || content.trim() === "") {
+      console.error("OpenRouter API returned empty content");
+      return NextResponse.json(
+        { success: false, error: "AI service returned empty response. Please try again." },
+        { status: 500 }
+      );
+    }
+
     // Parse the JSON response from the AI
     let concepts: string[];
     try {
-      concepts = JSON.parse(content);
+      // Clean the content - sometimes AI adds markdown formatting
+      const cleanContent = content.trim().replace(/^```json\s*/, '').replace(/\s*```$/, '');
+      
+      concepts = JSON.parse(cleanContent);
 
       // Validate that it's an array of strings
       if (!Array.isArray(concepts) || !concepts.every((item) => typeof item === "string")) {
         throw new Error("Invalid format: expected array of strings");
       }
 
-      // Ensure we have 5-8 concepts as specified
-      if (concepts.length < 5 || concepts.length > 8) {
-        console.warn(`AI returned ${concepts.length} concepts, expected 5-8`);
+      // Ensure we have at least some concepts
+      if (concepts.length === 0) {
+        throw new Error("AI returned empty array");
+      }
+
+      // Ensure we have 5-8 concepts as specified, but be flexible
+      if (concepts.length < 3) {
+        console.warn(`AI returned only ${concepts.length} concepts, padding with generic ones`);
+        // Add some generic related concepts if we get too few
+        const genericConcepts = ["Related Topic", "Connected Idea", "Associated Concept"];
+        while (concepts.length < 5 && genericConcepts.length > 0) {
+          concepts.push(genericConcepts.shift()!);
+        }
+      } else if (concepts.length > 8) {
+        console.warn(`AI returned ${concepts.length} concepts, trimming to 8`);
+        concepts = concepts.slice(0, 8);
       }
     } catch (parseError) {
       console.error("Failed to parse AI response as JSON:", {
-        content,
+        content: content?.substring(0, 200) + (content?.length > 200 ? '...' : ''), // Log first 200 chars only
         error: parseError,
       });
-      return NextResponse.json({ success: false, error: "Invalid response format from AI service" }, { status: 500 });
+      
+      // Try to provide a fallback response with generic concepts
+      const fallbackConcepts = [
+        "Related Concept 1",
+        "Connected Idea",
+        "Associated Topic",
+        "Similar Theme",
+        "Linked Subject"
+      ];
+      
+      console.warn("Using fallback concepts due to AI parsing error");
+      return NextResponse.json({ 
+        success: true, 
+        concepts: fallbackConcepts,
+        warning: "AI response was malformed, using fallback concepts"
+      }, { status: 200 });
     }
 
     return NextResponse.json({
