@@ -1,6 +1,5 @@
 "use client";
-
-import React, { useCallback, useEffect, useMemo } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import ReactFlow, {
   Node,
   Edge,
@@ -12,55 +11,161 @@ import ReactFlow, {
   Handle,
   Position,
   NodeProps,
+  EdgeTypes,
+  BaseEdge,
+  getSmoothStepPath,
+  EdgeProps,
 } from "reactflow";
-import "reactflow/dist/style.css";
+import { cn } from "@/lib/utils";
 import { Card } from "@/components/ui/card";
+import "reactflow/dist/style.css";
 
-// -------------------------
-// Custom Nodes (visuais premium)
-// -------------------------
+// --- Enhanced Custom Nodes with God-Tier Styling ---
 const CentralNode = ({ data, selected }: NodeProps) => {
+  const [isHovered, setIsHovered] = useState(false);
+
   return (
     <div
-      className={[
-        "relative w-56 text-center rounded-2xl px-5 py-4",
-        "bg-primary text-primary-foreground border-2 border-primary-foreground/40",
-        "shadow-[0_10px_30px_-5px_rgba(0,0,0,0.35)]",
-        "before:absolute before:inset-0 before:rounded-2xl before:bg-[radial-gradient(ellipse_at_top,_rgba(255,255,255,0.2),transparent_60%)]",
-        selected ? "ring-2 ring-ring ring-offset-2 ring-offset-background" : "",
-      ].join(" ")}
+      className={cn(
+        "relative group cursor-pointer transition-all duration-700 ease-out",
+        "transform-gpu will-change-transform",
+        isHovered && "scale-110"
+      )}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
     >
-      <div className="text-sm font-semibold leading-snug break-words font-geist-sans">{data.label}</div>
-      <Handle type="source" position={Position.Top} className="!opacity-0" />
-      <Handle type="source" position={Position.Right} className="!opacity-0" />
-      <Handle type="source" position={Position.Bottom} className="!opacity-0" />
-      <Handle type="source" position={Position.Left} className="!opacity-0" />
-      {/* Halo animado */}
-      <div className="pointer-events-none absolute -inset-1 rounded-3xl opacity-30 blur-md bg-[conic-gradient(from_90deg,theme(colors.primary.DEFAULT)_0%,transparent_25%,theme(colors.accent.DEFAULT)_50%,transparent_75%,theme(colors.primary.DEFAULT)_100%)] animate-[spin_8s_linear_infinite]" />
+      {/* Animated background glow */}
+      <div className="absolute -inset-4 bg-gradient-to-r from-blue-600/20 via-purple-600/20 to-pink-600/20 rounded-2xl blur-xl opacity-0 group-hover:opacity-100 transition-all duration-1000 animate-pulse" />
+
+      {/* Orbital rings */}
+      <div
+        className="absolute -inset-8 border border-primary/10 rounded-full animate-spin-slow opacity-0 group-hover:opacity-50 transition-opacity duration-1000"
+        style={{ animationDuration: "20s" }}
+      />
+      <div
+        className="absolute -inset-12 border border-accent/10 rounded-full animate-spin-slow opacity-0 group-hover:opacity-30 transition-opacity duration-1000"
+        style={{ animationDuration: "30s", animationDirection: "reverse" }}
+      />
+
+      {/* Main node */}
+      <div
+        className={cn(
+          "relative bg-gradient-to-br from-primary via-primary to-primary/90 text-primary-foreground",
+          "rounded-2xl border-2 border-white/20 backdrop-blur-sm p-6 shadow-2xl w-56 text-center",
+          "before:absolute before:inset-0 before:rounded-2xl before:bg-gradient-to-br before:from-white/10 before:to-transparent before:opacity-0",
+          "hover:before:opacity-100 before:transition-opacity before:duration-500",
+          "after:absolute after:inset-0 after:rounded-2xl after:shadow-inner after:shadow-white/20",
+          selected && "ring-4 ring-accent/50 ring-offset-4 ring-offset-background shadow-accent/25"
+        )}
+      >
+        {/* Shimmer effect */}
+        <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-transparent via-white/20 to-transparent -skew-x-12 translate-x-[-200%] group-hover:translate-x-[200%] transition-transform duration-1000 ease-out" />
+
+        <div className="relative z-10 text-base font-bold break-words leading-tight tracking-wide">{data.label}</div>
+
+        {/* Particle effect dots */}
+        <div className="absolute top-2 right-2 w-2 h-2 bg-white/40 rounded-full animate-ping opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+        <div className="absolute bottom-2 left-2 w-1.5 h-1.5 bg-accent/60 rounded-full animate-pulse opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+
+        <Handle type="source" position={Position.Top} className="!opacity-0" />
+        <Handle type="source" position={Position.Right} className="!opacity-0" />
+        <Handle type="source" position={Position.Bottom} className="!opacity-0" />
+        <Handle type="source" position={Position.Left} className="!opacity-0" />
+      </div>
     </div>
   );
 };
 
 const RelatedNode = ({ data, selected }: NodeProps) => {
+  const [isHovered, setIsHovered] = useState(false);
+
   return (
     <div
-      className={[
-        "relative w-44 text-center rounded-xl px-4 py-3 cursor-pointer",
-        "bg-card text-card-foreground border border-border/70",
-        "shadow-[0_8px_24px_-8px_rgba(0,0,0,0.3)]",
-        "transition-all duration-200",
-        "hover:shadow-[0_18px_40px_-10px_rgba(0,0,0,0.35)] hover:scale-[1.045] hover:border-primary/70",
-        selected ? "ring-2 ring-ring ring-offset-2 ring-offset-background" : "",
-      ].join(" ")}
+      className={cn(
+        "relative group cursor-pointer transition-all duration-500 ease-out",
+        "transform-gpu will-change-transform hover:scale-105 hover:-translate-y-1",
+        isHovered && "z-10"
+      )}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
     >
-      <div className="text-xs font-medium leading-snug break-words font-geist-sans">{data.label}</div>
-      <Handle type="target" position={Position.Top} className="!opacity-0" />
-      <Handle type="target" position={Position.Right} className="!opacity-0" />
-      <Handle type="target" position={Position.Bottom} className="!opacity-0" />
-      <Handle type="target" position={Position.Left} className="!opacity-0" />
-      {/* Glow sutil ao hover */}
-      <div className="pointer-events-none absolute inset-0 rounded-xl opacity-0 hover:opacity-30 transition-opacity duration-200 bg-[radial-gradient(ellipse_at_center,theme(colors.primary.DEFAULT)/30_0%,transparent_70%)]" />
+      {/* Glow effect */}
+      <div className="absolute -inset-2 bg-gradient-to-br from-accent/30 via-primary/20 to-secondary/30 rounded-xl blur-lg opacity-0 group-hover:opacity-100 transition-all duration-500" />
+
+      {/* Main node */}
+      <div
+        className={cn(
+          "relative bg-gradient-to-br from-card via-card/95 to-card/90 text-card-foreground",
+          "rounded-xl border border-border/50 backdrop-blur-md p-4 shadow-lg w-44 text-center",
+          "hover:border-primary/50 hover:shadow-2xl hover:shadow-primary/10",
+          "before:absolute before:inset-0 before:rounded-xl before:bg-gradient-to-br before:from-white/5 before:to-transparent",
+          "transition-all duration-500 group-hover:bg-gradient-to-br group-hover:from-card/98 group-hover:to-accent/5",
+          selected && "ring-2 ring-primary/50 ring-offset-2 ring-offset-background border-primary/70"
+        )}
+      >
+        {/* Animated border */}
+        <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-primary/0 via-primary/50 to-primary/0 opacity-0 group-hover:opacity-100 transition-opacity duration-700 -z-10 blur-sm" />
+
+        <div className="relative z-10 text-sm font-semibold break-words leading-snug">{data.label}</div>
+
+        {/* Corner accent */}
+        <div className="absolute top-1 right-1 w-1 h-1 bg-accent rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+
+        <Handle type="target" position={Position.Top} className="!opacity-0" />
+        <Handle type="target" position={Position.Right} className="!opacity-0" />
+        <Handle type="target" position={Position.Bottom} className="!opacity-0" />
+        <Handle type="target" position={Position.Left} className="!opacity-0" />
+      </div>
     </div>
+  );
+};
+
+// --- Enhanced Custom Edge ---
+const AnimatedEdge = ({ id, sourceX, sourceY, targetX, targetY, style }: EdgeProps) => {
+  const [edgePath] = getSmoothStepPath({
+    sourceX,
+    sourceY,
+    targetX,
+    targetY,
+    sourcePosition: Position.Right,
+    targetPosition: Position.Left,
+    borderRadius: 20,
+  });
+
+  return (
+    <g>
+      {/* Background path */}
+      <BaseEdge
+        path={edgePath}
+        style={{
+          ...style,
+          strokeWidth: 3,
+          stroke: "url(#gradient)",
+          filter: "url(#glow)",
+        }}
+      />
+
+      {/* Animated particle */}
+      <circle r="3" fill="hsl(var(--accent))" className="opacity-70">
+        <animateMotion dur="3s" repeatCount="indefinite" path={edgePath} />
+      </circle>
+
+      {/* Definitions for gradient and glow */}
+      <defs>
+        <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity="0.8" />
+          <stop offset="50%" stopColor="hsl(var(--accent))" stopOpacity="0.6" />
+          <stop offset="100%" stopColor="hsl(var(--secondary))" stopOpacity="0.4" />
+        </linearGradient>
+        <filter id="glow">
+          <feGaussianBlur stdDeviation="2" result="coloredBlur" />
+          <feMerge>
+            <feMergeNode in="coloredBlur" />
+            <feMergeNode in="SourceGraphic" />
+          </feMerge>
+        </filter>
+      </defs>
+    </g>
   );
 };
 
@@ -69,92 +174,74 @@ const nodeTypes: NodeTypes = {
   related: RelatedNode,
 };
 
-// -------------------------
-// Tipagens
-// -------------------------
+const edgeTypes: EdgeTypes = {
+  animated: AnimatedEdge,
+};
+
+// --- Enhanced Layout Algorithm ---
+const generateAdvancedLayout = (centralConcept: string, relatedConcepts: string[]) => {
+  const centerX = 0;
+  const centerY = 0;
+  const baseRadius = 200;
+  const radiusIncrement = Math.min(relatedConcepts.length * 8, 80);
+  const finalRadius = baseRadius + radiusIncrement;
+
+  const centralNode: Node = {
+    id: "central",
+    type: "central",
+    position: { x: centerX - 112, y: centerY - 40 },
+    data: { label: centralConcept, concept: centralConcept },
+    draggable: false,
+  };
+
+  const relatedNodes: Node[] = relatedConcepts.map((relatedConcept, index) => {
+    // Create organic spiral layout
+    const angleOffset = index * 137.508 * (Math.PI / 180); // Golden angle
+    const spiralRadius = finalRadius + Math.sin(index * 0.5) * 40;
+    const x = centerX + spiralRadius * Math.cos(angleOffset);
+    const y = centerY + spiralRadius * Math.sin(angleOffset);
+
+    return {
+      id: `related-${index}`,
+      type: "related",
+      position: { x: x - 88, y: y - 32 },
+      data: { label: relatedConcept, concept: relatedConcept },
+      draggable: false,
+    };
+  });
+
+  const edges: Edge[] = relatedNodes.map((node, index) => ({
+    id: `edge-central-${node.id}`,
+    source: "central",
+    target: node.id,
+    type: "animated",
+    style: {
+      strokeWidth: 2,
+      stroke: `hsl(${(index * 137.508) % 360}, 70%, 60%)`,
+    },
+    animated: false, // We handle animation in custom edge
+  }));
+
+  return { nodes: [centralNode, ...relatedNodes], edges };
+};
+
+// --- Interfaces ---
 export interface MindMapData {
   centralConcept: string;
   relatedConcepts: string[];
 }
 
 export interface MindMapCanvasProps {
-  concept?: string; // mantido para compatibilidade opcional
+  concept?: string;
   mindMapData?: MindMapData | null;
   onNodeClick: (concept: string) => void;
   isLoading?: boolean;
   error?: string | null;
 }
 
-// -------------------------
-// Util: layout radial responsivo e edges com “vida”
-// -------------------------
-function getResponsiveRadius(count: number) {
-  // Baseia no número de nós e heurística de viewport sem acessar window diretamente
-  // Raio mais largo para mais nós, mas com limites saudáveis
-  const base = 200;
-  const step = 14;
-  const radius = base + Math.min(count, 24) * step;
-  return radius;
-}
-
-function generateRadial(data: MindMapData) {
-  const centerX = 0;
-  const centerY = 0;
-  const count = data.relatedConcepts.length || 1;
-  const radius = getResponsiveRadius(count);
-
-  const centralNode: Node = {
-    id: "central",
-    type: "central",
-    position: { x: centerX, y: centerY },
-    data: { label: data.centralConcept, concept: data.centralConcept },
-    draggable: false,
-    selectable: false,
-  };
-
-  const relatedNodes: Node[] = data.relatedConcepts.map((concept, i) => {
-    const angle = (i * 2 * Math.PI) / count;
-    // leve variação trig para organicidade
-    const wobble = Math.sin(i * 1.7) * 10;
-    const x = centerX + (radius + wobble) * Math.cos(angle);
-    const y = centerY + (radius - wobble) * Math.sin(angle);
-    return {
-      id: `related-${i}`,
-      type: "related",
-      position: { x, y },
-      data: { label: concept, concept },
-      draggable: false,
-    };
-  });
-
-  // Edges com stroke “duplo” e animação suave
-  const edges: Edge[] = relatedNodes.map((n, i) => ({
-    id: `e-central-${n.id}`,
-    source: "central",
-    target: n.id,
-    type: "smoothstep",
-    animated: true,
-    style: {
-      stroke: "hsl(var(--border))",
-      strokeWidth: 1.75,
-    },
-    markerEnd: {
-      type: "arrowclosed",
-      color: "hsl(var(--border))",
-      width: 16,
-      height: 16,
-    } as any,
-    // data-driven animation offset (React Flow usa CSS; variedade via index)
-    data: { animationOffset: (i % 5) * 0.15 },
-  }));
-
-  return { nodes: [centralNode, ...relatedNodes], edges };
-}
-
-// -------------------------
-// Componente principal
-// -------------------------
+// --- God-Tier Mind Map Component ---
 export default function MindMapCanvas({
+  concept: _concept,
   mindMapData,
   onNodeClick,
   isLoading = false,
@@ -162,20 +249,26 @@ export default function MindMapCanvas({
 }: MindMapCanvasProps) {
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
+  const [isVisible, setIsVisible] = useState(false);
 
-  const build = useCallback((data: MindMapData) => generateRadial(data), []);
+  const generateNodesAndEdges = useCallback((data: MindMapData) => {
+    return generateAdvancedLayout(data.centralConcept, data.relatedConcepts);
+  }, []);
 
   useEffect(() => {
     if (mindMapData) {
-      const { nodes: n, edges: e } = build(mindMapData);
-      setNodes(n);
-      setEdges(e);
+      const { nodes: newNodes, edges: newEdges } = generateNodesAndEdges(mindMapData);
+      setNodes(newNodes);
+      setEdges(newEdges);
+
+      // Trigger entrance animation
+      setTimeout(() => setIsVisible(true), 100);
     }
-  }, [mindMapData, build, setNodes, setEdges]);
+  }, [mindMapData, generateNodesAndEdges, setNodes, setEdges]);
 
   const onNodeClickHandler = useCallback(
     (event: React.MouseEvent, node: Node) => {
-      if (node.type === "related" && node.data?.concept) {
+      if (node.type === "related" && node.data.concept) {
         onNodeClick(node.data.concept);
       }
     },
@@ -190,15 +283,20 @@ export default function MindMapCanvas({
       onEdgesChange,
       onNodeClick: onNodeClickHandler,
       nodeTypes,
+      edgeTypes,
       fitView: true,
       fitViewOptions: {
-        padding: 0.22,
+        padding: typeof window !== "undefined" && window.innerWidth < 640 ? 0.1 : 0.2,
         includeHiddenNodes: false,
-        duration: 800,
+        duration: 1200,
       },
-      minZoom: 0.45,
-      maxZoom: 2.2,
-      defaultViewport: { x: 0, y: 0, zoom: 1.1 },
+      minZoom: typeof window !== "undefined" && window.innerWidth < 640 ? 0.3 : 0.5,
+      maxZoom: typeof window !== "undefined" && window.innerWidth < 640 ? 1.5 : 2.0,
+      defaultViewport: {
+        x: 0,
+        y: 0,
+        zoom: typeof window !== "undefined" && window.innerWidth < 640 ? 0.7 : 1.0,
+      },
       proOptions: { hideAttribution: true },
       panOnDrag: true,
       panOnScroll: false,
@@ -215,93 +313,170 @@ export default function MindMapCanvas({
   );
 
   return (
-    <div className="relative w-full h-full min-h-[560px] sm:min-h-[640px] bg-gradient-to-br from-background via-background/95 to-muted/20 border border-border/50 rounded-2xl overflow-hidden shadow-2xl shadow-black/20">
-      {/* Background de impacto com layers suaves */}
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute inset-0 opacity-25 bg-[radial-gradient(ellipse_at_top_left,theme(colors.primary.DEFAULT)/12_0%,transparent_45%)]" />
-        <div className="absolute inset-0 opacity-20 bg-[radial-gradient(ellipse_at_bottom_right,theme(colors.accent.DEFAULT)/12_0%,transparent_50%)]" />
-        <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-transparent to-accent/5 animate-pulse opacity-20" />
+    <div className="relative w-full h-full min-h-[500px] sm:min-h-[700px] bg-gradient-to-br from-background via-background/98 to-muted/10 border border-border/30 rounded-3xl overflow-hidden shadow-2xl shadow-black/20 backdrop-blur-sm">
+      {/* Animated background layers */}
+      <div className="absolute inset-0 opacity-40">
+        <div
+          className="absolute inset-0 bg-gradient-to-r from-primary/3 via-transparent via-accent/3 to-secondary/3 animate-pulse"
+          style={{ animationDuration: "4s" }}
+        />
+        <div
+          className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-transparent via-primary/2 to-transparent animate-pulse"
+          style={{ animationDuration: "6s", animationDelay: "2s" }}
+        />
       </div>
 
-      <ReactFlow {...reactFlowProps}>
-        <Background color="hsl(var(--muted-foreground))" gap={28} size={1.25} className="opacity-25" />
-        <Controls
-          className="bg-card/90 backdrop-blur-md border border-border/60 rounded-xl shadow-xl m-4 sm:m-6 transition-all duration-300 hover:bg-card"
-          showZoom
-          showFitView
-          showInteractive={false}
-        />
-      </ReactFlow>
+      {/* Floating particles */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        {Array.from({ length: 6 }).map((_, i) => (
+          <div
+            key={i}
+            className={cn(
+              "absolute w-1 h-1 bg-primary/30 rounded-full",
+              "animate-float opacity-0 group-hover:opacity-100 transition-opacity duration-1000"
+            )}
+            style={{
+              left: `${20 + i * 15}%`,
+              top: `${10 + i * 10}%`,
+              animationDelay: `${i * 0.5}s`,
+              animationDuration: `${3 + i * 0.5}s`,
+            }}
+          />
+        ))}
+      </div>
 
-      {/* Loading overlay */}
+      <div
+        className={cn(
+          "transition-all duration-1000 ease-out h-full",
+          isVisible ? "opacity-100 scale-100" : "opacity-0 scale-95"
+        )}
+      >
+        <ReactFlow {...reactFlowProps}>
+          <Background color="hsl(var(--muted-foreground))" gap={40} size={1} className="opacity-15" />
+          <Controls
+            className="bg-card/80 backdrop-blur-xl border-border/30 rounded-2xl shadow-2xl m-8 transition-all duration-500 hover:bg-card/90 hover:shadow-xl hover:scale-105"
+            showZoom={true}
+            showFitView={true}
+            showInteractive={false}
+          />
+        </ReactFlow>
+      </div>
+
+      {/* Enhanced loading overlay */}
       {isLoading && (
-        <div className="absolute inset-0 bg-background/70 backdrop-blur-sm flex items-center justify-center z-10">
-          <div className="flex flex-col items-center gap-3">
-            <div className="relative h-10 w-10">
-              <div className="animate-spin rounded-full h-10 w-10 border-2 border-primary/30 border-t-primary" />
-              <div className="absolute inset-0 rounded-full animate-ping bg-primary/20" />
+        <div className="absolute inset-0 bg-background/90 backdrop-blur-md flex items-center justify-center z-20">
+          <div className="flex flex-col items-center space-y-6">
+            <div className="relative">
+              <div className="animate-spin rounded-full h-16 w-16 border-4 border-primary/30"></div>
+              <div
+                className="animate-spin rounded-full h-16 w-16 border-4 border-accent border-t-transparent absolute inset-0"
+                style={{ animationDirection: "reverse", animationDuration: "1.5s" }}
+              ></div>
             </div>
-            <p className="text-sm text-muted-foreground font-geist-sans">Generating ideas…</p>
+            <div className="text-center space-y-2">
+              <p className="text-lg font-semibold text-foreground animate-pulse">Generating Mind Map</p>
+              <p className="text-sm text-muted-foreground">Creating connections...</p>
+            </div>
           </div>
         </div>
       )}
 
-      {/* Error overlay */}
+      {/* Enhanced error overlay */}
       {error && (
-        <div className="absolute inset-0 bg-background/90 flex items-center justify-center z-10 p-4">
-          <div className="max-w-md w-full p-6 bg-card/95 backdrop-blur-sm border border-destructive/50 rounded-xl shadow-xl text-center">
-            <h3 className="font-semibold text-destructive">An Error Occurred</h3>
-            <p className="text-sm text-muted-foreground mt-2">{error}</p>
-          </div>
-        </div>
-      )}
-
-      {/* Empty state */}
-      {!mindMapData && !isLoading && !error && (
-        <div className="absolute inset-0 flex items-center justify-center p-6">
-          <Card className="p-8 bg-card/90 backdrop-blur-sm border-border/50 rounded-2xl shadow-xl max-w-md mx-4">
-            <div className="text-center space-y-6">
-              <div className="w-20 h-20 mx-auto bg-gradient-to-br from-primary/20 to-accent/20 rounded-full flex items-center justify-center animate-pulse">
-                <svg className="w-10 h-10 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13 10V3L4 14h7v7l9-11h-7z" />
+        <div className="absolute inset-0 bg-background/95 backdrop-blur-lg flex items-center justify-center z-20 p-6">
+          <Card className="p-8 bg-gradient-to-br from-destructive/10 to-destructive/5 border-destructive/20 shadow-2xl max-w-md mx-4">
+            <div className="text-center space-y-4">
+              <div className="w-16 h-16 mx-auto bg-gradient-to-br from-destructive/20 to-destructive/10 rounded-full flex items-center justify-center">
+                <svg className="w-8 h-8 text-destructive" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4.5c-.77-.833-2.694-.833-3.464 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z"
+                  />
                 </svg>
               </div>
-              <div className="space-y-2">
-                <h3 className="text-lg font-semibold text-foreground font-geist-sans">Ready to explore</h3>
-                <p className="text-sm text-muted-foreground leading-relaxed font-geist-sans">
-                  Enter a concept above to generate your interactive mind map and discover new connections
-                </p>
-              </div>
-              <div className="flex items-center justify-center gap-4 text-xs text-muted-foreground/70">
-                <span className="inline-flex items-center gap-1">
-                  <span className="w-2 h-2 bg-primary/60 rounded-full" /> AI-powered
-                </span>
-                <span className="inline-flex items-center gap-1">
-                  <span className="w-2 h-2 bg-accent/60 rounded-full" /> Interactive
-                </span>
-                <span className="inline-flex items-center gap-1">
-                  <span className="w-2 h-2 bg-secondary/60 rounded-full" /> Explorable
-                </span>
+              <div>
+                <h3 className="font-bold text-lg text-destructive">Connection Lost</h3>
+                <p className="text-sm text-muted-foreground mt-2 leading-relaxed">{error}</p>
               </div>
             </div>
           </Card>
         </div>
       )}
 
-      {/* CSS de animação para edges (escopo local) */}
+      {/* Enhanced empty state */}
+      {!mindMapData && !isLoading && !error && (
+        <div className="absolute inset-0 flex items-center justify-center p-8">
+          <Card className="p-10 bg-gradient-to-br from-card/95 via-card/90 to-accent/5 backdrop-blur-xl border-border/40 shadow-2xl max-w-lg mx-4 relative overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-primary/5 to-transparent animate-pulse" />
+
+            <div className="relative text-center space-y-8">
+              <div className="w-24 h-24 mx-auto bg-gradient-to-br from-primary/20 via-accent/20 to-secondary/20 rounded-full flex items-center justify-center relative overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-pulse" />
+                <svg
+                  className="w-12 h-12 text-primary relative z-10"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+              </div>
+
+              <div className="space-y-4">
+                <h3 className="text-2xl font-bold text-foreground bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+                  Ready to Explore
+                </h3>
+                <p className="text-muted-foreground leading-relaxed text-lg">
+                  Enter a concept above to generate your interactive mind map and discover amazing connections
+                </p>
+              </div>
+
+              <div className="flex items-center justify-center space-x-6 text-sm text-muted-foreground/80">
+                {[
+                  { label: "AI-Powered", color: "primary" },
+                  { label: "Interactive", color: "accent" },
+                  { label: "Beautiful", color: "secondary" },
+                ].map((feature, i) => (
+                  <div key={feature.label} className="flex items-center space-x-2">
+                    <div
+                      className={cn(
+                        "w-3 h-3 rounded-full animate-pulse",
+                        feature.color === "primary" && "bg-primary/60",
+                        feature.color === "accent" && "bg-accent/60",
+                        feature.color === "secondary" && "bg-secondary/60"
+                      )}
+                      style={{ animationDelay: `${i * 0.2}s` }}
+                    />
+                    <span className="font-medium">{feature.label}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </Card>
+        </div>
+      )}
+
+      {/* Custom CSS for animations */}
       <style jsx global>{`
-        .react-flow__edge-path {
-          filter: drop-shadow(0 0 6px rgba(0, 0, 0, 0.08));
-        }
-        .react-flow__edge.animated path {
-          stroke-dasharray: 6 6;
-          animation: dash 1.8s linear infinite;
-          opacity: 0.9;
-        }
-        @keyframes dash {
-          to {
-            stroke-dashoffset: -60;
+        @keyframes float {
+          0%,
+          100% {
+            transform: translateY(0px) rotate(0deg);
           }
+          33% {
+            transform: translateY(-10px) rotate(5deg);
+          }
+          66% {
+            transform: translateY(5px) rotate(-3deg);
+          }
+        }
+        .animate-float {
+          animation: float 3s ease-in-out infinite;
+        }
+        .animate-spin-slow {
+          animation: spin 20s linear infinite;
         }
       `}</style>
     </div>
