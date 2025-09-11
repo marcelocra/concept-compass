@@ -34,7 +34,7 @@ Format: ["Concept 1", "Concept 2", "Concept 3", "Concept 4", "Concept 5"]
 
 For the concept list, provide a mix of:
 - A core component or principle
-- A practical application or use case  
+- A practical application or use case
 - A potential challenge or consideration
 - A related technology or tool
 - A surprising or "out-of-the-box" connection
@@ -82,68 +82,119 @@ export async function POST(request: NextRequest): Promise<NextResponse<GenerateR
     const model =
       process.env.NODE_ENV === "production" ? process.env.OPENROUTER_MODEL || "gpt-oss-120b" : "gpt-oss-20b";
 
-    // Make OpenRouter API call with timeout
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+    // Retry logic with exponential backoff
+    const maxRetries = 2;
+    let openRouterResponse: Response | null = null;
+    let lastError: Error | null = null;
 
-    let openRouterResponse: Response;
-    try {
-      openRouterResponse = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${apiKey}`,
-          "Content-Type": "application/json",
-          "HTTP-Referer": process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000",
-          "X-Title": "Concept Compass MVP",
-        },
-        body: JSON.stringify({
-          model: model,
-          messages: [
-            {
-              role: "user",
-              content: generatePrompt(sanitizedConcept),
+    for (let attempt = 0; attempt <= maxRetries; attempt++) {
+      try {
+        console.log(`OpenRouter API attempt ${attempt + 1}/${maxRetries + 1}`);
+
+        // Calculate timeout and delay
+        const timeoutMs = 20000 + attempt * 10000; // 20s, 30s, 40s
+        const delayMs = attempt > 0 ? Math.min(1000 * Math.pow(2, attempt - 1), 5000) : 0; // 0ms, 1s, 2s
+
+        // Wait before retry (except first attempt)
+        if (delayMs > 0) {
+          console.log(`Waiting ${delayMs}ms before retry...`);
+          await new Promise((resolve) => setTimeout(resolve, delayMs));
+        }
+
+        // Make API call with timeout
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
+        try {
+          openRouterResponse = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${apiKey}`,
+              "Content-Type": "application/json",
+              "HTTP-Referer": process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000",
+              "X-Title": "Concept Compass MVP",
             },
-          ],
-          temperature: 0.7,
-          max_tokens: 500,
-        }),
-        signal: controller.signal,
-      });
-    } catch (fetchError) {
-      clearTimeout(timeoutId);
-      if (fetchError instanceof Error && fetchError.name === 'AbortError') {
-        console.error("OpenRouter API request timed out");
-        return NextResponse.json(
-          { success: false, error: "AI service is taking too long to respond. Please try again." },
-          { status: 504 }
-        );
+            body: JSON.stringify({
+              model: model,
+              messages: [
+                {
+                  role: "user",
+                  content: generatePrompt(sanitizedConcept),
+                },
+              ],
+              temperature: 0.7,
+              max_tokens: 500,
+            }),
+            signal: controller.signal,
+          });
+
+          clearTimeout(timeoutId);
+
+          // If we get a response, break out of retry loop
+          if (openRouterResponse.ok) {
+            console.log(`OpenRouter API succeeded on attempt ${attempt + 1}`);
+            break;
+          } else {
+            // Handle specific HTTP errors
+            const errorText = await openRouterResponse.text();
+            console.warn(`OpenRouter API returned ${openRouterResponse.status} on attempt ${attempt + 1}:`, errorText);
+
+            // Don't retry on certain errors
+            if (openRouterResponse.status === 401 || openRouterResponse.status === 403) {
+              console.error("Authentication error - not retrying");
+              break;
+            }
+
+            // For other errors, continue to retry
+            lastError = new Error(`HTTP ${openRouterResponse.status}: ${errorText}`);
+          }
+        } catch (fetchError) {
+          clearTimeout(timeoutId);
+
+          if (fetchError instanceof Error) {
+            if (fetchError.name === "AbortError") {
+              console.warn(`OpenRouter API timed out on attempt ${attempt + 1}`);
+              lastError = new Error(`Request timed out after ${timeoutMs}ms`);
+            } else {
+              console.warn(`OpenRouter API fetch error on attempt ${attempt + 1}:`, fetchError.message);
+              lastError = fetchError;
+            }
+          } else {
+            lastError = new Error("Unknown fetch error");
+          }
+        }
+      } catch (error) {
+        console.error(`Unexpected error on attempt ${attempt + 1}:`, error);
+        lastError = error instanceof Error ? error : new Error("Unknown error");
       }
-      throw fetchError; // Re-throw other fetch errors
-    } finally {
-      clearTimeout(timeoutId);
+
+      // If this was the last attempt, we'll exit the loop
+      if (attempt === maxRetries) {
+        console.error(`All ${maxRetries + 1} attempts failed`);
+      }
     }
 
-    if (!openRouterResponse.ok) {
-      const errorText = await openRouterResponse.text();
-      console.error("OpenRouter API error:", {
-        status: openRouterResponse.status,
-        statusText: openRouterResponse.statusText,
-        body: errorText,
-      });
+    // Check if we have a successful response
+    if (!openRouterResponse || !openRouterResponse.ok) {
+      console.error("OpenRouter API failed after all retries:", lastError?.message);
 
       // Handle specific error cases
-      if (openRouterResponse.status === 429) {
+      if (openRouterResponse?.status === 429) {
         return NextResponse.json(
-          { success: false, error: "Rate limit exceeded. Please try again later." },
+          { success: false, error: "AI service is currently overloaded. Please try again in a moment." },
           { status: 429 }
         );
       }
 
-      if (openRouterResponse.status === 401) {
+      if (openRouterResponse?.status === 401 || openRouterResponse?.status === 403) {
         return NextResponse.json({ success: false, error: "API authentication failed" }, { status: 500 });
       }
 
-      return NextResponse.json({ success: false, error: "AI service temporarily unavailable" }, { status: 500 });
+      // Generic error for other cases
+      return NextResponse.json(
+        { success: false, error: "AI service is temporarily unavailable. Please try again." },
+        { status: 500 }
+      );
     }
 
     const openRouterData: OpenRouterResponse = await openRouterResponse.json();
@@ -168,8 +219,11 @@ export async function POST(request: NextRequest): Promise<NextResponse<GenerateR
     let concepts: string[];
     try {
       // Clean the content - sometimes AI adds markdown formatting
-      const cleanContent = content.trim().replace(/^```json\s*/, '').replace(/\s*```$/, '');
-      
+      const cleanContent = content
+        .trim()
+        .replace(/^```json\s*/, "")
+        .replace(/\s*```$/, "");
+
       concepts = JSON.parse(cleanContent);
 
       // Validate that it's an array of strings
@@ -196,25 +250,28 @@ export async function POST(request: NextRequest): Promise<NextResponse<GenerateR
       }
     } catch (parseError) {
       console.error("Failed to parse AI response as JSON:", {
-        content: content?.substring(0, 200) + (content?.length > 200 ? '...' : ''), // Log first 200 chars only
+        content: content?.substring(0, 200) + (content?.length > 200 ? "..." : ""), // Log first 200 chars only
         error: parseError,
       });
-      
+
       // Try to provide a fallback response with generic concepts
       const fallbackConcepts = [
         "Related Concept 1",
         "Connected Idea",
         "Associated Topic",
         "Similar Theme",
-        "Linked Subject"
+        "Linked Subject",
       ];
-      
+
       console.warn("Using fallback concepts due to AI parsing error");
-      return NextResponse.json({ 
-        success: true, 
-        concepts: fallbackConcepts,
-        warning: "AI response was malformed, using fallback concepts"
-      }, { status: 200 });
+      return NextResponse.json(
+        {
+          success: true,
+          concepts: fallbackConcepts,
+          warning: "AI response was malformed, using fallback concepts",
+        },
+        { status: 200 }
+      );
     }
 
     return NextResponse.json({
