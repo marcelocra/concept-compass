@@ -27,7 +27,7 @@ vi.mock("reactflow", () => ({
   ),
   Controls: () => <div data-testid="react-flow-controls" />,
   Background: () => <div data-testid="react-flow-background" />,
-  useNodesState: (_initialNodes: unknown) => {
+  useNodesState: () => {
     mockSetNodes = vi.fn((newNodes: unknown) => {
       if (typeof newNodes === "function") {
         mockNodes = (newNodes as (nodes: unknown[]) => unknown[])(mockNodes);

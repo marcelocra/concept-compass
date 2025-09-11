@@ -75,7 +75,7 @@ global.DOMRect = class DOMRect {
       right: this.right,
     };
   }
-} as any;
+} as typeof DOMRect;
 
 // Mock window.innerWidth for responsive tests
 Object.defineProperty(window, 'innerWidth', {
