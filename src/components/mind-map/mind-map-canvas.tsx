@@ -242,20 +242,33 @@ export default function MindMapCanvas({
   error = null,
 }: MindMapCanvasProps) {
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
-  const [edges, setEdges, onEdgesChange] = useEdgesState([]); // ✅ CORREÇÃO AQUI
+  const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   const [isVisible, setIsVisible] = useState(false);
+
+  const [mindMapCache, setMindMapCache] = useState<Record<string, MindMapData>>({});
+  const [navigationHistory, setNavigationHistory] = useState<string[]>([]);
+  const [historyIndex, setHistoryIndex] = useState(-1);
+  const [currentConcept, setCurrentConcept] = useState<string>("");
 
   const generateNodesAndEdges = useCallback((data: MindMapData) => {
     return generateAdvancedLayout(data.centralConcept, data.relatedConcepts);
   }, []);
 
   useEffect(() => {
-    if (mindMapData) {
+    if (mindMapData && mindMapData.centralConcept) {
+      // Cache the new data
+      setMindMapCache((prev) => ({
+        ...prev,
+        [mindMapData.centralConcept]: mindMapData,
+      }));
+
+      // Update current concept
+      setCurrentConcept(mindMapData.centralConcept);
+
+      // Generate nodes/edges
       const { nodes: newNodes, edges: newEdges } = generateNodesAndEdges(mindMapData);
       setNodes(newNodes);
       setEdges(newEdges);
-
-      // Trigger entrance animation
       setTimeout(() => setIsVisible(true), 100);
     }
   }, [mindMapData, generateNodesAndEdges, setNodes, setEdges]);
@@ -263,11 +276,64 @@ export default function MindMapCanvas({
   const onNodeClickHandler = useCallback(
     (event: React.MouseEvent, node: Node) => {
       if (node.type === "related" && node.data.concept) {
-        onNodeClick(node.data.concept);
+        // Add to history
+        const newHistory = navigationHistory.slice(0, historyIndex + 1);
+        newHistory.push(node.data.concept);
+        setNavigationHistory(newHistory);
+        setHistoryIndex(newHistory.length - 1);
+
+        onNodeClick(node.data.concept); // 🔥 This triggers API call
       }
     },
-    [onNodeClick]
+    [onNodeClick, navigationHistory, historyIndex]
   );
+
+  const navigateToConceptFromCache = useCallback(
+    (concept: string) => {
+      const cachedData = mindMapCache[concept];
+      if (cachedData) {
+        // Use cached data - NO API CALL
+        const { nodes: newNodes, edges: newEdges } = generateNodesAndEdges(cachedData);
+        setNodes(newNodes);
+        setEdges(newEdges);
+        setCurrentConcept(concept);
+      }
+    },
+    [mindMapCache, generateNodesAndEdges, setNodes, setEdges]
+  );
+
+  const goBack = useCallback(() => {
+    if (historyIndex > 0) {
+      const prevIndex = historyIndex - 1;
+      const concept = navigationHistory[prevIndex];
+      setHistoryIndex(prevIndex);
+      navigateToConceptFromCache(concept);
+    }
+  }, [historyIndex, navigationHistory, navigateToConceptFromCache]);
+
+  const goForward = useCallback(() => {
+    if (historyIndex < navigationHistory.length - 1) {
+      const nextIndex = historyIndex + 1;
+      const concept = navigationHistory[nextIndex];
+      setHistoryIndex(nextIndex);
+      navigateToConceptFromCache(concept);
+    }
+  }, [historyIndex, navigationHistory, navigateToConceptFromCache]);
+
+  useEffect(() => {
+    const handleKeyPress = (e: KeyboardEvent) => {
+      if (e.altKey && e.key === "ArrowLeft") {
+        e.preventDefault();
+        goBack();
+      } else if (e.altKey && e.key === "ArrowRight") {
+        e.preventDefault();
+        goForward();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyPress);
+    return () => window.removeEventListener("keydown", handleKeyPress);
+  }, [goBack, goForward]);
 
   const reactFlowProps = useMemo(
     () => ({
@@ -306,8 +372,46 @@ export default function MindMapCanvas({
     [nodes, edges, onNodesChange, onEdgesChange, onNodeClickHandler]
   );
 
+  const NavigationBreadcrumb = () => {
+    if (navigationHistory.length === 0) return null;
+
+    const visibleHistory = navigationHistory.slice(Math.max(0, historyIndex - 2), historyIndex + 1);
+
+    return (
+      <div className="absolute top-4 left-4 bg-card/90 backdrop-blur-md rounded-lg p-3 shadow-lg border border-border/40 max-w-md z-30">
+        <div className="flex items-center space-x-2 text-sm">
+          {visibleHistory.map((concept, idx) => {
+            const actualIndex = historyIndex - (visibleHistory.length - 1 - idx);
+            const isActive = idx === visibleHistory.length - 1;
+
+            return (
+              <React.Fragment key={`${concept}-${actualIndex}`}>
+                <button
+                  onClick={() => {
+                    setHistoryIndex(actualIndex);
+                    navigateToConceptFromCache(concept); // 🔥 Uses cache!
+                  }}
+                  className={cn(
+                    "px-2 py-1 rounded hover:bg-muted/50 transition-colors truncate max-w-[100px]",
+                    isActive ? "font-semibold text-primary" : "text-muted-foreground hover:text-foreground"
+                  )}
+                  title={concept}
+                >
+                  {concept}
+                </button>
+                {idx < visibleHistory.length - 1 && <span className="text-muted-foreground">→</span>}
+              </React.Fragment>
+            );
+          })}
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="relative w-full h-full min-h-[500px] sm:min-h-[700px] bg-gradient-to-br from-background via-background/98 to-muted/10 border border-border/30 rounded-3xl overflow-hidden shadow-2xl shadow-black/20 backdrop-blur-sm">
+      <NavigationBreadcrumb />
+
       {/* Animated background layers */}
       <div className="absolute inset-0 opacity-40">
         <div
@@ -352,7 +456,26 @@ export default function MindMapCanvas({
             showZoom={true}
             showFitView={true}
             showInteractive={false}
-          />
+          >
+            <div className="flex items-center space-x-1 p-2 border-t border-border/30">
+              <button
+                onClick={goBack}
+                disabled={historyIndex <= 0}
+                className="p-2 rounded-lg hover:bg-muted/50 disabled:opacity-30 disabled:cursor-not-allowed transition-all text-sm"
+                title="Go Back (Alt + ←)"
+              >
+                ←
+              </button>
+              <button
+                onClick={goForward}
+                disabled={historyIndex >= navigationHistory.length - 1}
+                className="p-2 rounded-lg hover:bg-muted/50 disabled:opacity-30 disabled:cursor-not-allowed transition-all text-sm"
+                title="Go Forward (Alt + →)"
+              >
+                →
+              </button>
+            </div>
+          </Controls>
         </ReactFlow>
       </div>
 
