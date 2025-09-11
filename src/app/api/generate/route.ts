@@ -47,15 +47,6 @@ Example for "Sustainable Urban Farming":
 
 export async function POST(request: NextRequest): Promise<NextResponse<GenerateResponse>> {
   try {
-    // Check content length to prevent oversized requests (if header is available)
-    const contentLength = request.headers.get('content-length');
-    if (contentLength && parseInt(contentLength) > 1024) { // 1KB limit
-      return NextResponse.json(
-        { success: false, error: "Request too large" },
-        { status: 413 }
-      );
-    }
-
     // Validate environment variables
     const apiKey = process.env.OPENROUTER_API_KEY;
     if (!apiKey) {

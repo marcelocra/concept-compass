@@ -1,11 +1,12 @@
 "use client";
 
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import MindMapCanvas, { MindMapData } from "@/components/mind-map/mind-map-canvas";
+import ErrorBoundary from "@/components/error-boundary";
 
 // API response interface for type safety
 interface GenerateResponse {
@@ -21,11 +22,31 @@ export default function Home() {
   const [mindMapData, setMindMapData] = useState<MindMapData | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const [lastRequestTime, setLastRequestTime] = useState<number>(0);
 
-  // API call function with proper error handling for OpenRouter responses
+  // Memoized computed values for better performance
+  const hasError = useMemo(() => error !== null, [error]);
+  const canSubmit = useMemo(() => {
+    const now = Date.now();
+    const timeSinceLastRequest = now - lastRequestTime;
+    const MIN_REQUEST_INTERVAL = 1000; // 1 second minimum between requests
+    return !isLoading && timeSinceLastRequest >= MIN_REQUEST_INTERVAL;
+  }, [isLoading, lastRequestTime]);
+
+  // API call function with proper error handling and rate limiting
   const generateMindMap = useCallback(async (concept: string) => {
+    const now = Date.now();
+    const timeSinceLastRequest = now - lastRequestTime;
+    const MIN_REQUEST_INTERVAL = 1000; // 1 second minimum between requests
+    
+    if (timeSinceLastRequest < MIN_REQUEST_INTERVAL) {
+      setError("Please wait before making another request");
+      return;
+    }
+
     setIsLoading(true);
     setError(null);
+    setLastRequestTime(now);
 
     try {
       const response = await fetch("/api/generate", {
@@ -72,7 +93,7 @@ export default function Home() {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [lastRequestTime]);
 
   // Handle form submission
   const handleSubmit = useCallback(
@@ -85,9 +106,14 @@ export default function Home() {
         return;
       }
 
+      if (!canSubmit) {
+        setError("Please wait before making another request");
+        return;
+      }
+
       generateMindMap(trimmedInput);
     },
-    [inputValue, generateMindMap]
+    [inputValue, generateMindMap, canSubmit]
   );
 
   // Handle node click events from the mind map canvas
@@ -116,9 +142,10 @@ export default function Home() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Conditional rendering: show input form or mind map canvas */}
-      {!mindMapData && !isLoading ? (
+    <ErrorBoundary>
+      <div className="min-h-screen bg-background">
+        {/* Conditional rendering: show input form or mind map canvas */}
+        {!mindMapData && !isLoading ? (
         // Input form interface
         <div className="container mx-auto px-4 py-16 flex items-center justify-center min-h-screen">
           <Card className="w-full max-w-md">
@@ -151,16 +178,16 @@ export default function Home() {
                 )}
 
                 <div className="flex gap-2">
-                  <Button type="submit" className="flex-1" disabled={isLoading}>
+                  <Button type="submit" className="flex-1" disabled={!canSubmit}>
                     {isLoading ? "Generating..." : "Generate Mind Map"}
                   </Button>
-                  {error && (
+                  {hasError && (
                     <Button
                       data-testid="retry-button"
                       type="button"
                       variant="outline"
                       onClick={handleRetry}
-                      disabled={isLoading}
+                      disabled={!canSubmit}
                     >
                       Retry
                     </Button>
@@ -190,8 +217,8 @@ export default function Home() {
             </div>
 
             <div className="flex items-center space-x-2">
-              {error && (
-                <Button data-testid="retry-button" variant="outline" size="sm" onClick={handleRetry}>
+              {hasError && (
+                <Button data-testid="retry-button" variant="outline" size="sm" onClick={handleRetry} disabled={!canSubmit}>
                   Retry
                 </Button>
               )}
@@ -213,5 +240,6 @@ export default function Home() {
         </div>
       )}
     </div>
+    </ErrorBoundary>
   );
 }
