@@ -117,6 +117,88 @@
     @apply border-border outline-ring/50;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-sans;
+  }
+}
+
+/* React Flow custom styling */
+@layer components {
+  .react-flow__node {
+    @apply transition-all duration-300;
+  }
+
+  .react-flow__edge {
+    @apply transition-all duration-300;
+  }
+
+  .react-flow__controls {
+    @apply shadow-lg;
+  }
+
+  .react-flow__controls-button {
+    @apply bg-card hover:bg-accent border-border transition-colors duration-200;
+  }
+
+  .react-flow__controls-button:hover {
+    @apply bg-accent text-accent-foreground;
+  }
+
+  .react-flow__background {
+    @apply opacity-40;
+  }
+
+  /* Custom scrollbar for better aesthetics */
+  ::-webkit-scrollbar {
+    @apply w-2 h-2;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-muted/30;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-border rounded-full;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-border/80;
+  }
+}
+
+/* Animation utilities */
+@layer utilities {
+  .animate-in {
+    animation-duration: 0.3s;
+    animation-fill-mode: both;
+  }
+
+  .slide-in-from-top-2 {
+    animation-name: slideInFromTop2;
+  }
+
+  .slide-in-from-top-4 {
+    animation-name: slideInFromTop4;
+  }
+
+  @keyframes slideInFromTop2 {
+    from {
+      opacity: 0;
+      transform: translateY(-0.5rem);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes slideInFromTop4 {
+    from {
+      opacity: 0;
+      transform: translateY(-1rem);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
 }

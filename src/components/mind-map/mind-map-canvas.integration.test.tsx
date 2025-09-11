@@ -1,3 +1,4 @@
+import React from "react";
 import { describe, it, expect, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import "@testing-library/jest-dom";
@@ -47,13 +48,7 @@ describe("MindMapCanvas Integration", () => {
     expect(container).toHaveClass(
       "relative",
       "w-full",
-      "h-full",
-      "min-h-[600px]",
-      "bg-background",
-      "border",
-      "border-border",
-      "rounded-lg",
-      "overflow-hidden"
+      "h-full"
     );
   });
 

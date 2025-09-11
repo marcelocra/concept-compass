@@ -13,6 +13,7 @@ import ReactFlow, {
   Position,
   NodeProps,
 } from "reactflow";
+import "reactflow/dist/style.css";
 import { cn } from "@/lib/utils";
 
 // Custom node component for central concept
@@ -20,13 +21,16 @@ const CentralNode = ({ data, selected }: NodeProps) => {
   return (
     <div
       className={cn(
-        "px-4 py-3 rounded-lg border-2 font-semibold text-center min-w-[120px] max-w-[200px]",
-        "bg-primary text-primary-foreground border-border",
-        "shadow-lg transition-all duration-200",
-        selected && "ring-2 ring-ring ring-offset-2"
+        "px-4 sm:px-6 py-3 sm:py-4 rounded-xl border-2 font-semibold text-center",
+        "min-w-[120px] sm:min-w-[140px] max-w-[180px] sm:max-w-[220px]",
+        "bg-gradient-to-br from-primary to-primary/90 text-primary-foreground border-primary/20",
+        "shadow-xl shadow-primary/20 transition-all duration-300",
+        "ring-4 ring-primary/10 ring-offset-2 ring-offset-background",
+        selected && "ring-primary/30 scale-105"
       )}
     >
-      <div className="text-sm font-medium break-words">{data.label}</div>
+      <div className="text-sm sm:text-base font-semibold break-words leading-tight">{data.label}</div>
+      <div className="text-xs opacity-75 mt-1 font-medium hidden sm:block">Central Concept</div>
       <Handle type="source" position={Position.Top} className="opacity-0" />
       <Handle type="source" position={Position.Right} className="opacity-0" />
       <Handle type="source" position={Position.Bottom} className="opacity-0" />
@@ -40,14 +44,19 @@ const RelatedNode = ({ data, selected }: NodeProps) => {
   return (
     <div
       className={cn(
-        "px-3 py-2 rounded-md border font-medium text-center min-w-[100px] max-w-[180px]",
-        "bg-card text-card-foreground border-border",
-        "shadow-md transition-all duration-200 cursor-pointer",
-        "hover:bg-accent hover:text-accent-foreground hover:shadow-lg hover:scale-105",
-        selected && "ring-2 ring-ring ring-offset-2"
+        "px-3 sm:px-4 py-2 sm:py-3 rounded-lg border font-medium text-center",
+        "min-w-[90px] sm:min-w-[110px] max-w-[160px] sm:max-w-[190px]",
+        "bg-gradient-to-br from-card to-card/95 text-card-foreground border-border/60",
+        "shadow-lg shadow-black/5 transition-all duration-300 cursor-pointer",
+        "hover:bg-gradient-to-br hover:from-accent hover:to-accent/95 hover:text-accent-foreground",
+        "hover:shadow-xl hover:shadow-primary/10 hover:scale-110 hover:border-primary/30",
+        "hover:-translate-y-1 active:scale-105 active:translate-y-0",
+        "ring-2 ring-transparent hover:ring-primary/20",
+        selected && "ring-primary/40 scale-105 bg-gradient-to-br from-accent to-accent/95"
       )}
     >
-      <div className="text-sm break-words">{data.label}</div>
+      <div className="text-xs sm:text-sm break-words leading-tight">{data.label}</div>
+      <div className="text-xs opacity-60 mt-1 font-normal hidden sm:block">Click to explore</div>
       <Handle type="target" position={Position.Top} className="opacity-0" />
       <Handle type="target" position={Position.Right} className="opacity-0" />
       <Handle type="target" position={Position.Bottom} className="opacity-0" />
@@ -85,11 +94,12 @@ export default function MindMapCanvas({
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
 
-  // Generate nodes and edges from mind map data
+  // Generate nodes and edges from mind map data with responsive positioning
   const generateNodesAndEdges = useCallback((data: MindMapData) => {
     const centerX = 0;
     const centerY = 0;
-    const radius = 200;
+    // Responsive radius based on screen size
+    const radius = window.innerWidth < 640 ? 150 : window.innerWidth < 1024 ? 180 : 220;
 
     // Create central node
     const centralNode: Node = {
@@ -121,17 +131,25 @@ export default function MindMapCanvas({
       };
     });
 
-    // Create edges from central to related nodes
-    const newEdges: Edge[] = relatedNodes.map((node) => ({
+    // Create edges from central to related nodes with enhanced styling
+    const newEdges: Edge[] = relatedNodes.map((node, index) => ({
       id: `edge-central-${node.id}`,
       source: "central",
       target: node.id,
       type: "default",
       style: {
-        stroke: "hsl(var(--border))",
+        stroke: "hsl(var(--primary))",
         strokeWidth: 2,
+        strokeOpacity: 0.6,
+        strokeDasharray: "0",
       },
       animated: false,
+      markerEnd: {
+        type: "arrowclosed",
+        color: "hsl(var(--primary))",
+        width: 20,
+        height: 20,
+      },
     }));
 
     return {
@@ -160,7 +178,7 @@ export default function MindMapCanvas({
     [onNodeClick]
   );
 
-  // Memoize ReactFlow props for performance
+  // Memoize ReactFlow props for performance with responsive settings
   const reactFlowProps = useMemo(
     () => ({
       nodes,
@@ -171,41 +189,63 @@ export default function MindMapCanvas({
       nodeTypes,
       fitView: true,
       fitViewOptions: {
-        padding: 0.2,
+        padding: window.innerWidth < 640 ? 0.1 : 0.2,
         includeHiddenNodes: false,
+        minZoom: window.innerWidth < 640 ? 0.3 : 0.5,
+        maxZoom: window.innerWidth < 640 ? 1.5 : 2,
       },
-      minZoom: 0.5,
-      maxZoom: 2,
-      defaultViewport: { x: 0, y: 0, zoom: 1 },
+      minZoom: window.innerWidth < 640 ? 0.3 : 0.5,
+      maxZoom: window.innerWidth < 640 ? 1.5 : 2,
+      defaultViewport: { x: 0, y: 0, zoom: window.innerWidth < 640 ? 0.7 : 1 },
       proOptions: { hideAttribution: true },
+      panOnDrag: true,
+      panOnScroll: false,
+      zoomOnScroll: true,
+      zoomOnPinch: true,
+      zoomOnDoubleClick: false,
     }),
     [nodes, edges, onNodesChange, onEdgesChange, onNodeClickHandler]
   );
 
   return (
-    <div className="relative w-full h-full min-h-[600px] bg-background border border-border rounded-lg overflow-hidden">
+    <div className="relative w-full h-full min-h-[500px] sm:min-h-[600px] bg-gradient-to-br from-background via-background to-muted/10 border border-border/60 rounded-xl overflow-hidden shadow-xl shadow-black/5">
       <ReactFlow {...reactFlowProps}>
-        <Background color="hsl(var(--muted))" gap={20} size={1} />
-        <Controls className="bg-card border-border" showZoom={true} showFitView={true} showInteractive={false} />
+        <Background color="hsl(var(--muted))" gap={24} size={1.2} variant="dots" className="opacity-40" />
+        <Controls
+          className="bg-card/95 backdrop-blur-sm border-border/60 rounded-lg shadow-lg m-4"
+          showZoom={true}
+          showFitView={true}
+          showInteractive={false}
+        />
       </ReactFlow>
 
-      {/* Loading overlay */}
+      {/* Loading overlay with enhanced styling */}
       {isLoading && (
-        <div className="absolute inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center z-10">
-          <div className="flex flex-col items-center space-y-4">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" role="status" aria-label="Loading"></div>
-            <p className="text-sm text-muted-foreground">Generating mind map...</p>
+        <div className="absolute inset-0 bg-background/90 backdrop-blur-md flex items-center justify-center z-10">
+          <div className="flex flex-col items-center space-y-6 p-8 bg-card/95 rounded-xl border border-border/60 shadow-2xl">
+            <div className="relative">
+              <div
+                className="animate-spin rounded-full h-12 w-12 border-4 border-primary/20 border-t-primary"
+                role="status"
+                aria-label="Loading"
+              ></div>
+              <div className="absolute inset-0 rounded-full bg-gradient-to-r from-primary/20 to-transparent animate-pulse"></div>
+            </div>
+            <div className="text-center space-y-2">
+              <p className="text-base font-medium text-foreground">Generating mind map...</p>
+              <p className="text-sm text-muted-foreground">AI is exploring connections</p>
+            </div>
           </div>
         </div>
       )}
 
-      {/* Error overlay */}
+      {/* Error overlay with enhanced styling */}
       {error && (
-        <div className="absolute inset-0 bg-background/90 backdrop-blur-sm flex items-center justify-center z-10">
-          <div className="max-w-md p-6 bg-card border border-destructive rounded-lg shadow-lg">
+        <div className="absolute inset-0 bg-background/90 backdrop-blur-md flex items-center justify-center z-10 p-4">
+          <div className="max-w-md w-full p-6 bg-card/95 border border-destructive/30 rounded-xl shadow-2xl animate-in slide-in-from-top-4 duration-300">
             <div className="flex flex-col items-center space-y-4 text-center">
-              <div className="text-destructive">
-                <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="w-12 h-12 bg-destructive/10 rounded-full flex items-center justify-center">
+                <svg className="w-6 h-6 text-destructive" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -214,20 +254,30 @@ export default function MindMapCanvas({
                   />
                 </svg>
               </div>
-              <div>
-                <h3 className="font-semibold text-destructive">Error</h3>
-                <p className="text-sm text-muted-foreground mt-1">{error}</p>
+              <div className="space-y-2">
+                <h3 className="font-semibold text-destructive text-lg">Something went wrong</h3>
+                <p className="text-sm text-muted-foreground leading-relaxed">{error}</p>
               </div>
             </div>
           </div>
         </div>
       )}
 
-      {/* Empty state when no data */}
+      {/* Empty state when no data with enhanced styling */}
       {!mindMapData && !isLoading && !error && (
-        <div className="absolute inset-0 flex items-center justify-center">
-          <div className="text-center space-y-2">
-            <p className="text-muted-foreground">Enter a concept to generate your mind map</p>
+        <div className="absolute inset-0 flex items-center justify-center p-8">
+          <div className="text-center space-y-4 max-w-md">
+            <div className="w-16 h-16 mx-auto bg-muted/50 rounded-full flex items-center justify-center">
+              <svg className="w-8 h-8 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
+            </div>
+            <div className="space-y-2">
+              <p className="text-lg font-medium text-muted-foreground">Ready to explore</p>
+              <p className="text-sm text-muted-foreground/80 leading-relaxed">
+                Enter a concept above to generate your interactive mind map
+              </p>
+            </div>
           </div>
         </div>
       )}

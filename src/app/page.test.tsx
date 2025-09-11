@@ -48,7 +48,7 @@ describe("Home Page Integration Tests", () => {
       
       expect(screen.getByText("Transform any keyword into a dynamic, explorable mind map")).toBeInTheDocument();
       expect(screen.getByText("Enter any concept and watch it bloom into a universe of connected ideas.")).toBeInTheDocument();
-      expect(screen.getByText("Click on any node to explore deeper.")).toBeInTheDocument();
+      expect(screen.getByText("💡 Click on any node to explore deeper")).toBeInTheDocument();
     });
   });
 

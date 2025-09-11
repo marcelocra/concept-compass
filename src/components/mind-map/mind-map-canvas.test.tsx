@@ -71,7 +71,7 @@ describe("MindMapCanvas", () => {
   it("renders empty state when no mind map data is provided", () => {
     render(<MindMapCanvas concept="test concept" onNodeClick={mockOnNodeClick} />);
 
-    expect(screen.getByText("Enter a concept to generate your mind map")).toBeInTheDocument();
+    expect(screen.getByText("Ready to explore")).toBeInTheDocument();
     expect(screen.getByTestId("react-flow")).toBeInTheDocument();
   });
 
@@ -87,7 +87,7 @@ describe("MindMapCanvas", () => {
 
     render(<MindMapCanvas concept="test concept" onNodeClick={mockOnNodeClick} error={errorMessage} />);
 
-    expect(screen.getByText("Error")).toBeInTheDocument();
+    expect(screen.getByText("Something went wrong")).toBeInTheDocument();
     expect(screen.getByText(errorMessage)).toBeInTheDocument();
   });
 
@@ -170,13 +170,13 @@ describe("MindMapCanvas", () => {
     render(<MindMapCanvas concept="test concept" onNodeClick={mockOnNodeClick} />);
 
     const container = screen.getByTestId("react-flow").parentElement;
-    expect(container).toHaveClass("relative", "w-full", "h-full", "min-h-[600px]");
+    expect(container).toHaveClass("relative", "w-full", "h-full");
   });
 
   it("shows loading overlay with correct z-index", () => {
     render(<MindMapCanvas concept="test concept" onNodeClick={mockOnNodeClick} isLoading={true} />);
 
-    const loadingOverlay = screen.getByText("Generating mind map...").parentElement?.parentElement;
+    const loadingOverlay = screen.getByText("Generating mind map...").closest(".absolute");
     expect(loadingOverlay).toHaveClass("z-10");
   });
 

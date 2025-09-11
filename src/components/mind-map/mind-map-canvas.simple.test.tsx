@@ -43,7 +43,7 @@ describe("MindMapCanvas - Simple Tests", () => {
   it("shows empty state when no data provided", () => {
     render(<MindMapCanvas concept="test concept" onNodeClick={mockOnNodeClick} />);
 
-    expect(screen.getByText("Enter a concept to generate your mind map")).toBeInTheDocument();
+    expect(screen.getByText("Ready to explore")).toBeInTheDocument();
   });
 
   it("shows loading state", () => {
@@ -57,7 +57,7 @@ describe("MindMapCanvas - Simple Tests", () => {
 
     render(<MindMapCanvas concept="test concept" onNodeClick={mockOnNodeClick} error={errorMessage} />);
 
-    expect(screen.getByText("Error")).toBeInTheDocument();
+    expect(screen.getByText("Something went wrong")).toBeInTheDocument();
     expect(screen.getByText(errorMessage)).toBeInTheDocument();
   });
 

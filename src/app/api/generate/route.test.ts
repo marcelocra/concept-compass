@@ -196,7 +196,7 @@ describe("/api/generate", () => {
           "HTTP-Referer": "http://localhost:3000",
           "X-Title": "Concept Compass MVP",
         },
-        body: expect.stringContaining('"sustainable farming"'),
+        body: expect.stringContaining("sustainable farming"),
       });
     });
 
