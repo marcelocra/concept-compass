@@ -1,18 +1,18 @@
 import React from "react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import "@testing-library/jest-dom";
 import MindMapCanvas, { MindMapData } from "./mind-map-canvas";
 
 // Mock ReactFlow since it requires DOM APIs that aren't available in jsdom
-let mockNodes: any[] = [];
-let mockSetNodes: any = vi.fn();
+let mockNodes: unknown[] = [];
+let mockSetNodes = vi.fn();
 
 vi.mock("reactflow", () => ({
-  default: ({ children, onNodeClick }: any) => (
+  default: ({ children, onNodeClick }: { children: React.ReactNode; onNodeClick?: (e: React.MouseEvent, node: unknown) => void }) => (
     <div data-testid="react-flow">
       {children}
-      {mockNodes?.map((node: any) => (
+      {mockNodes?.map((node: { id: string; type: string; data: { label: string } }) => (
         <div
           key={node.id}
           data-testid={`node-${node.id}`}
@@ -27,17 +27,17 @@ vi.mock("reactflow", () => ({
   ),
   Controls: () => <div data-testid="react-flow-controls" />,
   Background: () => <div data-testid="react-flow-background" />,
-  useNodesState: (initialNodes: any) => {
-    mockSetNodes = vi.fn((newNodes) => {
+  useNodesState: (_initialNodes: unknown) => {
+    mockSetNodes = vi.fn((newNodes: unknown) => {
       if (typeof newNodes === "function") {
-        mockNodes = newNodes(mockNodes);
+        mockNodes = (newNodes as (nodes: unknown[]) => unknown[])(mockNodes);
       } else {
-        mockNodes = newNodes;
+        mockNodes = newNodes as unknown[];
       }
     });
     return [mockNodes, mockSetNodes, vi.fn()];
   },
-  useEdgesState: (initialEdges: any) => {
+  useEdgesState: (initialEdges: unknown) => {
     return [initialEdges || [], vi.fn(), vi.fn()];
   },
   Handle: () => null,

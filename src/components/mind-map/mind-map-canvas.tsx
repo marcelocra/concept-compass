@@ -85,7 +85,7 @@ export interface MindMapCanvasProps {
 }
 
 export default function MindMapCanvas({
-  concept,
+  concept: _concept,
   mindMapData,
   onNodeClick,
   isLoading = false,
@@ -132,7 +132,7 @@ export default function MindMapCanvas({
     });
 
     // Create edges from central to related nodes with enhanced styling
-    const newEdges: Edge[] = relatedNodes.map((node, index) => ({
+    const newEdges: Edge[] = relatedNodes.map((node) => ({
       id: `edge-central-${node.id}`,
       source: "central",
       target: node.id,
@@ -141,15 +141,8 @@ export default function MindMapCanvas({
         stroke: "hsl(var(--primary))",
         strokeWidth: 2,
         strokeOpacity: 0.6,
-        strokeDasharray: "0",
       },
       animated: false,
-      markerEnd: {
-        type: "arrowclosed",
-        color: "hsl(var(--primary))",
-        width: 20,
-        height: 20,
-      },
     }));
 
     return {
@@ -210,7 +203,7 @@ export default function MindMapCanvas({
   return (
     <div className="relative w-full h-full min-h-[500px] sm:min-h-[600px] bg-gradient-to-br from-background via-background to-muted/10 border border-border/60 rounded-xl overflow-hidden shadow-xl shadow-black/5">
       <ReactFlow {...reactFlowProps}>
-        <Background color="hsl(var(--muted))" gap={24} size={1.2} variant="dots" className="opacity-40" />
+        <Background color="hsl(var(--muted))" gap={24} size={1.2} className="opacity-40" />
         <Controls
           className="bg-card/95 backdrop-blur-sm border-border/60 rounded-lg shadow-lg m-4"
           showZoom={true}

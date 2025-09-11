@@ -6,7 +6,7 @@ import MindMapCanvas from "./mind-map-canvas";
 
 // Mock ReactFlow for integration testing
 vi.mock("reactflow", () => ({
-  default: ({ children }: any) => (
+  default: ({ children }: { children: React.ReactNode }) => (
     <div data-testid="react-flow-integration">
       {children}
       <div data-testid="mock-canvas">ReactFlow Canvas</div>

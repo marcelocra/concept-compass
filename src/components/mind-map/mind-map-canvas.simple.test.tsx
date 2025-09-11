@@ -6,7 +6,7 @@ import "@testing-library/jest-dom";
 // Mock ReactFlow completely to avoid CSS issues
 vi.mock("reactflow", () => ({
   __esModule: true,
-  default: ({ children }: any) => (
+  default: ({ children }: { children: React.ReactNode }) => (
     <div data-testid="react-flow-mock">
       {children}
       <div data-testid="mock-canvas">ReactFlow Canvas</div>
