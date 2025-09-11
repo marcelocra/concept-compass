@@ -18,7 +18,7 @@ export default function Home() {
   // State management for the application
   const [currentConcept, setCurrentConcept] = useState<string>("");
   const [inputValue, setInputValue] = useState<string>("");
-  const [mindMapData, setMindMapData] = useState<MindMapData | null>(null);
+  const [mindMapData, setMindMapData] = useState<MindMapData | undefined>(undefined);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -111,7 +111,7 @@ export default function Home() {
   const handleStartOver = useCallback(() => {
     setCurrentConcept("");
     setInputValue("");
-    setMindMapData(null);
+    setMindMapData(undefined);
     setError(null);
   }, []);
 

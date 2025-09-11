@@ -19,7 +19,7 @@ describe("/api/generate", () => {
     vi.clearAllMocks();
     // Set up environment variables
     Object.entries(mockEnv).forEach(([key, value]) => {
-      process.env[key] = value;
+      (process.env as any)[key] = value;
     });
   });
 
@@ -116,7 +116,7 @@ describe("/api/generate", () => {
 
   describe("Model selection", () => {
     it("should use gpt-oss-20b in development environment", async () => {
-      process.env.NODE_ENV = "development";
+      (process.env as any).NODE_ENV = "development";
 
       const mockResponse = createMockOpenRouterResponse(
         '["Concept 1", "Concept 2", "Concept 3", "Concept 4", "Concept 5"]'
@@ -136,7 +136,7 @@ describe("/api/generate", () => {
     });
 
     it("should use gpt-oss-120b in production environment", async () => {
-      process.env.NODE_ENV = "production";
+      (process.env as any).NODE_ENV = "production";
 
       const mockResponse = createMockOpenRouterResponse(
         '["Concept 1", "Concept 2", "Concept 3", "Concept 4", "Concept 5"]'
@@ -156,8 +156,8 @@ describe("/api/generate", () => {
     });
 
     it("should use OPENROUTER_MODEL environment variable when set", async () => {
-      process.env.NODE_ENV = "production";
-      process.env.OPENROUTER_MODEL = "custom-model";
+      (process.env as any).NODE_ENV = "production";
+      (process.env as any).OPENROUTER_MODEL = "custom-model";
 
       const mockResponse = createMockOpenRouterResponse(
         '["Concept 1", "Concept 2", "Concept 3", "Concept 4", "Concept 5"]'
