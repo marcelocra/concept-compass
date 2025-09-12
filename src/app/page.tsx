@@ -5,7 +5,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import MindMapCanvas, { MindMapData } from "@/components/mind-map/mind-map-canvas";
+import MindMapCanvas2 from "@/components/mind-map/mind-map-canvas-2";
 
 // API response interface for type safety
 interface GenerateResponse {
@@ -14,6 +16,44 @@ interface GenerateResponse {
   error?: string;
 }
 
+// Helper function to get implementation name from environment variable
+const getImplementationName = (index: number): string => {
+  // Direct access to specific env vars (Next.js bundles these at build time)
+  const envVars: Record<number, string | undefined> = {
+    0: process.env.NEXT_PUBLIC_MINDMAP_IMPL_0,
+    1: process.env.NEXT_PUBLIC_MINDMAP_IMPL_1,
+    2: process.env.NEXT_PUBLIC_MINDMAP_IMPL_2,
+    3: process.env.NEXT_PUBLIC_MINDMAP_IMPL_3,
+    // Add more as needed
+  };
+
+  console.log(`Implementation ${index}:`, envVars[index]); // Debug log
+  return envVars[index] || `${index}`;
+};
+
+// Mind map implementations registry
+const MIND_MAP_IMPLEMENTATIONS = [
+  {
+    id: "default",
+    name: getImplementationName(0),
+    description: "Original implementation with particles and breadcrumbs",
+    component: MindMapCanvas,
+  },
+  {
+    id: "alternative",
+    name: getImplementationName(1),
+    description: "Clean modern design with enhanced animations",
+    component: MindMapCanvas2,
+  },
+  // Add new implementations here:
+  // {
+  //   id: "experimental",
+  //   name: getImplementationName(2),
+  //   description: "New experimental features",
+  //   component: MindMapCanvas3,
+  // },
+] as const;
+
 export default function Home() {
   // State management for the application
   const [currentConcept, setCurrentConcept] = useState<string>("");
@@ -21,6 +61,7 @@ export default function Home() {
   const [mindMapData, setMindMapData] = useState<MindMapData | undefined>(undefined);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const [selectedImplementation, setSelectedImplementation] = useState<string>("default");
 
   // API call function with proper error handling for OpenRouter responses
   const generateMindMap = useCallback(async (concept: string) => {
@@ -238,6 +279,21 @@ export default function Home() {
             </div>
 
             <div className="flex items-center space-x-2 flex-shrink-0">
+              <Select value={selectedImplementation} onValueChange={setSelectedImplementation}>
+                <SelectTrigger className="w-32 sm:w-40 h-8 text-xs">
+                  <SelectValue placeholder="Select..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {MIND_MAP_IMPLEMENTATIONS.map((impl) => (
+                    <SelectItem key={impl.id} value={impl.id}>
+                      <div className="flex flex-col">
+                        <span className="font-medium">{impl.name}</span>
+                        <span className="text-xs text-muted-foreground hidden sm:block">{impl.description}</span>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               {error && (
                 <Button
                   data-testid="retry-button"
@@ -275,13 +331,19 @@ export default function Home() {
 
           {/* Mind map canvas */}
           <div className="flex-1 p-3 sm:p-6">
-            <MindMapCanvas
-              concept={currentConcept}
-              mindMapData={mindMapData}
-              onNodeClick={handleNodeClick}
-              isLoading={isLoading}
-              error={error}
-            />
+            {(() => {
+              const implementation = MIND_MAP_IMPLEMENTATIONS.find((impl) => impl.id === selectedImplementation);
+              const Component = implementation?.component || MindMapCanvas;
+              return (
+                <Component
+                  concept={currentConcept}
+                  mindMapData={mindMapData}
+                  onNodeClick={handleNodeClick}
+                  isLoading={isLoading}
+                  error={error}
+                />
+              );
+            })()}
           </div>
         </div>
       )}

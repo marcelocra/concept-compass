@@ -424,7 +424,7 @@ const MindMapContent = ({ mindMapData, onNodeClick, isLoading = false, error = n
       {/* camada ReactFlow -------------------------------------------- */}
       <div className={cn("h-full transition-opacity duration-300", visible ? "opacity-100" : "opacity-0")}>
         <ReactFlow {...flowProps}>
-          <Background variant="dots" size={1} gap={64} className="opacity-10" color="hsl(var(--muted-foreground))" />
+          <Background size={1} gap={64} className="opacity-10" color="hsl(var(--muted-foreground))" />
         </ReactFlow>
       </div>
 
