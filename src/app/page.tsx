@@ -8,6 +8,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import MindMapCanvas, { MindMapData } from "@/components/mind-map/mind-map-canvas";
 import MindMapCanvas2 from "@/components/mind-map/mind-map-canvas-2";
+import MindMapCanvas3 from "@/components/mind-map/mind-map-canvas-3";
+import MindMapCanvas4 from "@/components/mind-map/mind-map-canvas-4";
 
 // API response interface for type safety
 interface GenerateResponse {
@@ -17,7 +19,7 @@ interface GenerateResponse {
 }
 
 // Helper function to get implementation name from environment variable
-const getImplementationName = (index: number): string => {
+const getImplementationName = (index: number, defaultName?: string): string => {
   // Direct access to specific env vars (Next.js bundles these at build time)
   const envVars: Record<number, string | undefined> = {
     0: process.env.NEXT_PUBLIC_MINDMAP_IMPL_0,
@@ -28,30 +30,35 @@ const getImplementationName = (index: number): string => {
   };
 
   console.log(`Implementation ${index}:`, envVars[index]); // Debug log
-  return envVars[index] || `${index}`;
+  return envVars[index] || defaultName || `${index}`;
 };
 
 // Mind map implementations registry
 const MIND_MAP_IMPLEMENTATIONS = [
   {
     id: "default",
-    name: getImplementationName(0),
+    name: getImplementationName(0, "Classic"),
     description: "Original implementation with particles and breadcrumbs",
     component: MindMapCanvas,
   },
   {
-    id: "alternative",
-    name: getImplementationName(1),
+    id: "enhanced",
+    name: getImplementationName(1, "Enhanced"),
     description: "Clean modern design with enhanced animations",
     component: MindMapCanvas2,
   },
-  // Add new implementations here:
-  // {
-  //   id: "experimental",
-  //   name: getImplementationName(2),
-  //   description: "New experimental features",
-  //   component: MindMapCanvas3,
-  // },
+  {
+    id: "cosmic",
+    name: getImplementationName(2, "Cosmic"),
+    description: "Quantum particle field with advanced physics",
+    component: MindMapCanvas3,
+  },
+  {
+    id: "galaxy",
+    name: getImplementationName(3, "Galaxy"),
+    description: "Advanced spiral galaxy layout with quantum effects",
+    component: MindMapCanvas4,
+  },
 ] as const;
 
 export default function Home() {
