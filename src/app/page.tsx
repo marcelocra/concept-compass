@@ -286,7 +286,7 @@ export default function Home() {
             </div>
 
             <div className="flex items-center space-x-2 flex-shrink-0">
-              <Select value={selectedImplementation} onValueChange={setSelectedImplementation}>
+              {/* <Select value={selectedImplementation} onValueChange={setSelectedImplementation}>
                 <SelectTrigger className="w-32 sm:w-40 h-8 text-xs">
                   <SelectValue placeholder="Select..." />
                 </SelectTrigger>
@@ -300,7 +300,7 @@ export default function Home() {
                     </SelectItem>
                   ))}
                 </SelectContent>
-              </Select>
+              </Select> */}
               {error && (
                 <Button
                   data-testid="retry-button"
