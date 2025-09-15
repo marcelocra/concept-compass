@@ -34,7 +34,7 @@
     -   Write unit tests for route functionality and security
     -   _Requirements: 4.1, 4.3, 4.4_
 
--   [ ] 4.2 Create POST /api/maps route for creating new mind maps
+-   [x] 4.2 Create POST /api/maps route for creating new mind maps
 
     -   Implement route handler with request validation using Zod
     -   Add database insertion logic with user association
