@@ -2,74 +2,96 @@
 
 **Navigate the universe of ideas. Your AI-powered brainstorming partner for turning a single word into a world of possibilities.**
 
-[Link to Live Demo] · [Link to Video Presentation]
+[![Next.js](https://img.shields.io/badge/Next.js-15-black?logo=next.js&logoColor=white)](https://nextjs.org/)
+[![React](https://img.shields.io/badge/React-19-blue?logo=react&logoColor=white)](https://react.dev/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5-blue?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4-38B2AC?logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
+[![Deployed with Vercel](https://img.shields.io/badge/Deployed_with-Vercel-black?logo=vercel&logoColor=white)](https://vercel.com)
 
----
+## 🏆 Hackathon Submission Portal
 
-## 💡 The Inspiration
+> This project is an evolving entry for two sequential hackathons. I plan to continue developing it long after the competitions are over. To ensure **fair judging**, each submission is preserved in a permanent Git hash and has its own immutable deployment link.
 
-Every great project, story, or business starts with a single idea. But the journey from a nascent concept to a fully-fledged plan is often hampered by one of the oldest creative challenges: the blank page. Traditional brainstorming is often linear and limited by our own immediate knowledge. We wanted to create a tool that breaks this linear process, transforming brainstorming into an infinite, interactive exploration.
+### **🚀 Current Submission: Kiro.dev Hackathon (Sept 12-15)**
 
-Concept Compass was born from the need to build a thinking partner that doesn't just give you answers, but helps you ask better questions and discover paths you never thought to explore.
+This is the active version of the project, featuring user authentication, session persistence, and a development workflow powered by Kiro.dev.
+
+-   **[📦 Code at Submission]()**: TBD
+-   **[➡️ Live Demo at Submission]()**: TBD
+-   **[📄 View on Devpost]()**: TBD
+
+### **📍 Past Milestone: OpenAI `gpt-oss` Hackathon (Sept 9-11)**
+
+The initial MVP was a stateless, client-side focused application built in a 48-hour sprint to demonstrate the core mind-mapping experience with `gpt-oss` models.
+
+-   **[📦 Code at Submission](https://github.com/marcelocra/concept-compass/tree/edd2fe74ad9df895b391e674a80f35597a45bb44)**
+-   **[➡️ Live Demo at Submission](https://concept-compass-i2oqfkahs-marcelo-almeidas-projects.vercel.app)**
+-   **[📄 View on Devpost](https://devpost.com/software/concept-compass)**
+
+> [!NOTE]\
+> **A Note for Judging**: The Code at Submission link points to the final commit made before the deadline. This version includes several last-minute UI/UX enhancements. These final commits passed all local builds but were prevented from deploying by automated CI checks. Therefore, the Live Demo link reflects the last successful deployment from a few hours prior. For the most complete review of the work accomplished, please refer to the **Code at Submission** link.
 
 ## ✨ What It Does
 
-Concept Compass is an interactive web application that transforms any keyword or idea into a dynamic, explorable mind map. Instead of a static list of suggestions, it provides a visual graph of interconnected concepts, allowing users to navigate and expand their ideas in any direction, infinitely.
+Concept Compass is an interactive web application that transforms any keyword or idea into a dynamic, explorable mind map. Instead of a static list of suggestions, it provides a visual graph of interconnected concepts, allowing you to navigate and expand your ideas in any direction, infinitely.
 
-**How it works:**
+1.  **Plant a Seed:** Start with a single concept (e.g., "The Future of AI Assistants").
+2.  **Grow the Universe:** Powered by OpenAI's `gpt-oss` models, it generates a rich mind map of related ideas.
+3.  **Explore Infinitely:** Click any node to make it the new center of the universe, revealing ever-deeper layers of thought in a seamless partnership between human curiosity and AI.
 
-1. **Plant a Seed:** The user starts by entering a single concept (e.g., "Sustainable Urban Farming").
-2. **Grow the Universe:** Powered by OpenAI's `gpt-oss` models, Concept Compass generates a rich mind map of related core concepts, such as "Vertical Farming," "Community Gardens," "Aquaponics," and "Target Markets."
-3. **Explore Infinitely:** The magic is in the interaction. A user can click on any node (e.g., "Aquaponics") to make it the new center of the universe, generating a fresh set of related sub-concepts. This process can be repeated endlessly, allowing for an unparalleled depth of exploration.
+## 🛠️ Tech Stack & Architecture
 
-This creates a seamless partnership between human curiosity and the expansive, creative power of AI.
+Concept Compass is built with a modern, high-performance tech stack. The entire development process for new features is orchestrated using a **spec-driven workflow** within the **Kiro.dev IDE**.
 
-## 🚀 Key Features
-
-- **AI-Powered Mind Mapping:** Leverages advanced generative models to create meaningful and contextually relevant conceptual connections.
-- **Infinite Exploration:** A dynamic graph interface that allows users to endlessly expand any node, diving deeper into any topic.
-- **Visual & Intuitive UI:** A clean, minimalist canvas designed to keep the focus on the ideas, making brainstorming feel like a creative journey.
-- **Save & Resume Sessions:** Users can save their brainstorming graphs to the cloud, allowing them to revisit and continue their thought process at any time.
-
-## 🛠️ How We Built It
-
-Concept Compass is built with a modern, robust, and scalable tech stack designed to provide a seamless user experience.
-
-- **Core AI Engine:** The conceptual generation is powered by **OpenAI's `gpt-oss` models**. We chose these models for their exceptional ability to understand nuance and generate a diverse, high-quality range of interconnected ideas that form the backbone of the application.
-- **Frontend:** A responsive and interactive user interface built with **React** and **Next.js**.
-- **Visualization:** The dynamic mind map is rendered using **React Flow**, a powerful library for building node-based UIs, allowing for smooth navigation, zooming, and expansion.
-- **Backend:** A lightweight **Node.js** server using **Express** handles API requests to the AI model, ensuring security and efficient communication.
-- **Styling:** Styled with **Tailwind CSS** for a clean, modern, and mobile-first design.
-
-## 🛣️ What's Next for Concept Compass
-
-We believe this is just the beginning. Our vision is to build Concept Compass into a comprehensive platform for creative thinking. Our roadmap includes:
-
-- **Real-Time Collaboration:** Allowing multiple users to brainstorm on the same canvas simultaneously.
-- **Template Library:** Pre-built starting maps for common brainstorming tasks like "Business Model Canvas," "SWOT Analysis," or "Story Plotting."
-- **Advanced Export Options:** Exporting graphs to various formats, including high-resolution images, PDF, and Markdown outlines.
-- **Workflow Integrations:** Connecting nodes to external applications (like Notion, Trello, or a calendar) to turn ideas into actionable tasks.
+| Category           | Technology                                                                             |
+| ------------------ | -------------------------------------------------------------------------------------- |
+| **Framework**      | [Next.js](https://nextjs.org/) 15 (App Router & Turbopack)                             |
+| **UI**             | [React](https://react.dev/) 19, [TypeScript](https://www.typescriptlang.org/)          |
+| **Styling**        | [Tailwind CSS](https://tailwindcss.com/), [shadcn/ui](https://ui.shadcn.com/)          |
+| **AI Model**       | [OpenAI `gpt-oss-120b`](https://openai.com/) via [OpenRouter.ai](http://openrouter.ai) |
+| **Visualization**  | [React Flow](https://reactflow.dev/)                                                   |
+| **Authentication** | [Clerk](https://clerk.com/)                                                            |
+| **Database**       | [Supabase](https://supabase.com/) (Postgres), [Drizzle ORM](https://orm.drizzle.team/) |
+| **Testing**        | [Vitest](https://vitest.dev/), [React Testing Library](https://testing-library.com/)   |
+| **Deployment**     | [Vercel](https://vercel.com/)                                                          |
 
 ## 🏃 Getting Started
 
 To run this project locally, follow these simple steps:
 
-1. **Clone the repository:**
-   ```sh
-   git clone https://github.com/marcelocra/concept-compass.git
-   cd concept-compass
-   ```
-2. **Install dependencies:**
-   ```sh
-   npm install
-   ```
-3. **Set up environment variables:**
-   Create a `.env.local` file and add your API keys:
-   ```
-   OPENAI_API_KEY=your_key_here
-   ```
-4. **Run the development server:**
-   ```sh
-   npm run dev
-   ```
-   Open [http://localhost:3000](http://localhost:3000) in your browser to see the result.
+1.  **Clone the repository:**
+
+    ```bash
+    git clone https://github.com/marcelocra/concept-compass.git
+    cd concept-compass
+    ```
+
+2.  **Install dependencies using pnpm:**
+
+    ```bash
+    pnpm install
+    ```
+
+3.  **Set up environment variables:**
+    Create a `.env.local` file in the root of the project by copying the example file:
+
+    ```bash
+    cp .env.example .env.local
+    ```
+
+    Now, fill in the required API keys and environment variables in your new `.env.local` file.
+
+4.  **Run the development server:**
+    ```bash
+    pnpm dev
+    ```
+
+Open [http://localhost:3000](http://localhost:3000) in your browser to see the result.
+
+## 🛣️ What's Next for Concept Compass
+
+This project is more than a hackathon entry; it's the foundation for a comprehensive creative suite. The roadmap includes:
+
+-   **Branching History & Exploration Trees:** Implement a system to go back and forth in the graph of ideas, allowing a user to explore multiple creative paths from a single starting point.
+-   **"Deep Dive" Elaboration Engine:** Add a feature to expand the content of any node, generating a detailed summary or explanation of that specific concept.
+-   **Actionable Content Generation:** Create a feature where a user can select a path of nodes and have the AI generate practical content from it, such as a blog post outline or a series of social media posts.
