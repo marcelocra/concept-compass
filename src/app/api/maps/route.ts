@@ -77,7 +77,12 @@ async function generateInitialMindMap(concept: string): Promise<GraphData> {
       },
     ];
 
-    const edges = [];
+    const edges: Array<{
+      id: string;
+      source: string;
+      target: string;
+      type: string;
+    }> = [];
 
     // Add concept nodes around the center
     generateData.concepts.forEach((conceptText: string, index: number) => {
@@ -146,7 +151,10 @@ export async function GET(): Promise<NextResponse<GetMapResponse>> {
     const userMaps = await db.select().from(mindMaps).where(eq(mindMaps.userId, userId)).limit(1);
 
     // Return the first map or null if no maps found
-    const map = userMaps.length > 0 ? userMaps[0] : null;
+    const map = userMaps.length > 0 ? {
+      ...userMaps[0],
+      graphData: userMaps[0].graphData as GraphData,
+    } : null;
 
     return NextResponse.json({
       success: true,
@@ -201,7 +209,10 @@ export async function POST(request: NextRequest): Promise<NextResponse<CreateMap
 
     return NextResponse.json({
       success: true,
-      map: newMindMap,
+      map: {
+        ...newMindMap,
+        graphData: newMindMap.graphData as GraphData,
+      },
     });
   } catch (error) {
     console.error("Error creating mind map:", error);

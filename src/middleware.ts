@@ -1,4 +1,4 @@
-import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
+import { clerkMiddleware } from "@clerk/nextjs/server";
 
 // // Define which routes should be protected (require authentication)
 // const isProtectedRoute = createRouteMatcher(["/", "/api/maps(.*)", "/api/generate(.*)"]);

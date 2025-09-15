@@ -1,20 +1,45 @@
 "use client";
 
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
+import { useUser } from "@clerk/nextjs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import MindMapCanvas, { MindMapData } from "@/components/mind-map/mind-map-canvas";
-import MindMapCanvas2 from "@/components/mind-map/mind-map-canvas-2";
-import MindMapCanvas3 from "@/components/mind-map/mind-map-canvas-3";
-import MindMapCanvas4 from "@/components/mind-map/mind-map-canvas-4";
 
-// API response interface for type safety
+import MindMapCanvas, { MindMapData } from "@/components/mind-map/mind-map-canvas";
+import { GraphData } from "@/lib/db/schema";
+
+// API response interfaces for type safety
 interface GenerateResponse {
   success: boolean;
   concepts?: string[];
+  error?: string;
+}
+
+interface MapResponse {
+  success: boolean;
+  map?: {
+    id: string;
+    userId: string;
+    name: string;
+    graphData: GraphData;
+    createdAt: Date;
+    updatedAt: Date;
+  } | null;
+  error?: string;
+}
+
+interface CreateMapResponse {
+  success: boolean;
+  map?: {
+    id: string;
+    userId: string;
+    name: string;
+    graphData: GraphData;
+    createdAt: Date;
+    updatedAt: Date;
+  };
   error?: string;
 }
 
@@ -41,34 +66,153 @@ const MIND_MAP_IMPLEMENTATIONS = [
     description: "Original implementation with particles and breadcrumbs",
     component: MindMapCanvas,
   },
-  {
-    id: "enhanced",
-    name: getImplementationName(1, "Enhanced"),
-    description: "Clean modern design with enhanced animations",
-    component: MindMapCanvas2,
-  },
-  {
-    id: "cosmic",
-    name: getImplementationName(2, "Cosmic"),
-    description: "Quantum particle field with advanced physics",
-    component: MindMapCanvas3,
-  },
-  {
-    id: "galaxy",
-    name: getImplementationName(3, "Galaxy"),
-    description: "Advanced spiral galaxy layout with quantum effects",
-    component: MindMapCanvas4,
-  },
+  // {
+  //   id: "enhanced",
+  //   name: getImplementationName(1, "Enhanced"),
+  //   description: "Clean modern design with enhanced animations",
+  //   component: MindMapCanvas2,
+  // },
+  // {
+  //   id: "cosmic",
+  //   name: getImplementationName(2, "Cosmic"),
+  //   description: "Quantum particle field with advanced physics",
+  //   component: MindMapCanvas3,
+  // },
+  // {
+  //   id: "galaxy",
+  //   name: getImplementationName(3, "Galaxy"),
+  //   description: "Advanced spiral galaxy layout with quantum effects",
+  //   component: MindMapCanvas4,
+  // },
 ] as const;
 
 export default function Home() {
+  // Authentication state
+  const { isSignedIn, isLoaded } = useUser();
+
   // State management for the application
   const [currentConcept, setCurrentConcept] = useState<string>("");
   const [inputValue, setInputValue] = useState<string>("");
   const [mindMapData, setMindMapData] = useState<MindMapData | undefined>(undefined);
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [isLoadingMap, setIsLoadingMap] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
-  const [selectedImplementation, setSelectedImplementation] = useState<string>("default");
+  const [selectedImplementation] = useState<string>("default");
+  const [hasCheckedForMap, setHasCheckedForMap] = useState<boolean>(false);
+
+  // Load existing map from database
+  const loadExistingMap = useCallback(async () => {
+    if (!isSignedIn) return;
+
+    setIsLoadingMap(true);
+    setError(null);
+
+    try {
+      const response = await fetch("/api/maps", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      const data: MapResponse = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || `HTTP error! status: ${response.status}`);
+      }
+
+      if (data.success && data.map) {
+        // Convert GraphData to MindMapData for display
+        const graphData = data.map.graphData;
+        setCurrentConcept(graphData.centralConcept);
+
+        // Convert to MindMapData format for the canvas components
+        const relatedConcepts = graphData.nodes.filter((node) => node.id !== "center").map((node) => node.data.label);
+
+        setMindMapData({
+          centralConcept: graphData.centralConcept,
+          relatedConcepts,
+        });
+      }
+    } catch (err) {
+      console.error("Error loading existing map:", err);
+      // Don't show error for failed map loading, just continue without a map
+    } finally {
+      setIsLoadingMap(false);
+      setHasCheckedForMap(true);
+    }
+  }, [isSignedIn]);
+
+  // Create and save new map
+  const createAndSaveMap = useCallback(
+    async (concept: string) => {
+      if (!isSignedIn) return;
+
+      setIsLoading(true);
+      setError(null);
+
+      try {
+        const response = await fetch("/api/maps", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            name: `Mind Map: ${concept}`,
+            initialConcept: concept,
+          }),
+        });
+
+        const data: CreateMapResponse = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.error || `HTTP error! status: ${response.status}`);
+        }
+
+        if (!data.success || !data.map) {
+          throw new Error(data.error || "Failed to create map");
+        }
+
+        // Update state with the new map
+        const graphData = data.map.graphData;
+        setCurrentConcept(graphData.centralConcept);
+
+        // Convert to MindMapData format for the canvas components
+        const relatedConcepts = graphData.nodes.filter((node) => node.id !== "center").map((node) => node.data.label);
+
+        setMindMapData({
+          centralConcept: graphData.centralConcept,
+          relatedConcepts,
+        });
+      } catch (err) {
+        console.error("Error creating map:", err);
+
+        if (err instanceof Error) {
+          if (err.message.includes("fetch")) {
+            setError("Network error. Please check your connection and try again.");
+          } else if (err.message.includes("rate limit")) {
+            setError("API rate limit reached. Please wait a moment and try again.");
+          } else if (err.message.includes("API")) {
+            setError("AI service is temporarily unavailable. Please try again later.");
+          } else {
+            setError(err.message);
+          }
+        } else {
+          setError("An unexpected error occurred. Please try again.");
+        }
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [isSignedIn]
+  );
+
+  // Check for existing map when user signs in
+  useEffect(() => {
+    if (isLoaded && isSignedIn && !hasCheckedForMap) {
+      loadExistingMap();
+    }
+  }, [isLoaded, isSignedIn, hasCheckedForMap, loadExistingMap]);
 
   // API call function with proper error handling for OpenRouter responses
   const generateMindMap = useCallback(async (concept: string) => {
@@ -122,7 +266,7 @@ export default function Home() {
     }
   }, []);
 
-  // Handle form submission
+  // Handle form submission for creating new map
   const handleSubmit = useCallback(
     (e: React.FormEvent) => {
       e.preventDefault();
@@ -133,9 +277,9 @@ export default function Home() {
         return;
       }
 
-      generateMindMap(trimmedInput);
+      createAndSaveMap(trimmedInput);
     },
-    [inputValue, generateMindMap]
+    [inputValue, createAndSaveMap]
   );
 
   // Handle node click events from the mind map canvas
@@ -163,10 +307,57 @@ export default function Home() {
     setError(null);
   }, []);
 
+  // Show loading while checking authentication
+  if (!isLoaded) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20 flex items-center justify-center">
+        <div className="flex items-center gap-2">
+          <div className="w-4 h-4 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+          <span className="text-muted-foreground">Loading...</span>
+        </div>
+      </div>
+    );
+  }
+
+  // Show sign-in message if user is not authenticated
+  if (!isSignedIn) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
+        <div className="container mx-auto px-4 py-8 sm:py-16 flex items-center justify-center min-h-screen">
+          <Card className="w-full max-w-md shadow-xl border-0 bg-card/95 backdrop-blur-sm">
+            <CardHeader className="text-center space-y-3 pb-6">
+              <div className="mx-auto w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mb-2">
+                <svg className="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+              </div>
+              <CardTitle className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
+                Concept Compass
+              </CardTitle>
+              <CardDescription className="text-base text-muted-foreground leading-relaxed">
+                Transform any keyword into a dynamic, explorable mind map
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="text-center space-y-4">
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  Please sign in to create and save your mind maps.
+                </p>
+                <p className="text-xs text-muted-foreground/80">
+                  Use the sign-in button in the top-right corner to get started.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
       {/* Conditional rendering: show input form or mind map canvas */}
-      {!mindMapData && !isLoading ? (
+      {!mindMapData && !isLoading && !isLoadingMap ? (
         // Input form interface with enhanced styling
         <div className="container mx-auto px-4 py-8 sm:py-16 flex items-center justify-center min-h-screen">
           <Card className="w-full max-w-md shadow-xl border-0 bg-card/95 backdrop-blur-sm">
@@ -228,15 +419,20 @@ export default function Home() {
                   <Button
                     type="submit"
                     className="flex-1 h-12 text-base font-medium transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
-                    disabled={isLoading}
+                    disabled={isLoading || isLoadingMap}
                   >
                     {isLoading ? (
                       <div className="flex items-center gap-2">
                         <div className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
-                        Generating...
+                        Creating...
+                      </div>
+                    ) : isLoadingMap ? (
+                      <div className="flex items-center gap-2">
+                        <div className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
+                        Loading...
                       </div>
                     ) : (
-                      "Generate Mind Map"
+                      "Create & Save Map"
                     )}
                   </Button>
                   {error && (
@@ -246,7 +442,7 @@ export default function Home() {
                       variant="outline"
                       className="h-12 px-6 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
                       onClick={handleRetry}
-                      disabled={isLoading}
+                      disabled={isLoading || isLoadingMap}
                     >
                       Retry
                     </Button>
@@ -262,6 +458,14 @@ export default function Home() {
               </div>
             </CardContent>
           </Card>
+        </div>
+      ) : isLoadingMap ? (
+        // Loading state while checking for existing map
+        <div className="container mx-auto px-4 py-8 sm:py-16 flex items-center justify-center min-h-screen">
+          <div className="flex items-center gap-2">
+            <div className="w-4 h-4 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+            <span className="text-muted-foreground">Loading your mind map...</span>
+          </div>
         </div>
       ) : (
         // Mind map canvas interface with enhanced styling

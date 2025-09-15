@@ -269,7 +269,7 @@ describe("/api/maps POST", () => {
       expect(insertCall.graphData.centralConcept).toBe("Sustainable Farming");
       
       // Check that generated concepts are included in nodes
-      const nodeLabels = insertCall.graphData.nodes.map((node: any) => node.data.label);
+      const nodeLabels = insertCall.graphData.nodes.map((node: { data: { label: string } }) => node.data.label);
       expect(nodeLabels).toContain("Sustainable Farming"); // Center node
       generatedConcepts.forEach(concept => {
         expect(nodeLabels).toContain(concept);
@@ -437,21 +437,21 @@ describe("/api/maps POST", () => {
       const { nodes, edges } = insertCall.graphData;
 
       // Check center node
-      const centerNode = nodes.find((node: any) => node.id === "center");
+      const centerNode = nodes.find((node: { id: string; data: { label: string }; position: { x: number; y: number } }) => node.id === "center");
       expect(centerNode).toBeDefined();
-      expect(centerNode.data.label).toBe("Central Concept");
-      expect(centerNode.position).toEqual({ x: 0, y: 0 });
+      expect(centerNode?.data.label).toBe("Central Concept");
+      expect(centerNode?.position).toEqual({ x: 0, y: 0 });
 
       // Check concept nodes are positioned around center
-      const conceptNodes = nodes.filter((node: any) => node.id !== "center");
-      conceptNodes.forEach((node: any) => {
+      const conceptNodes = nodes.filter((node: { id: string }) => node.id !== "center");
+      conceptNodes.forEach((node: { position: { x: number; y: number }; data: { label: string } }) => {
         // At least one coordinate should be non-zero (nodes are positioned in a circle)
         expect(Math.abs(node.position.x) + Math.abs(node.position.y)).toBeGreaterThan(0);
         expect(node.data.label).toBeDefined();
       });
 
       // Check edges connect center to all concept nodes
-      edges.forEach((edge: any) => {
+      edges.forEach((edge: { source: string; target: string }) => {
         expect(edge.source).toBe("center");
         expect(edge.target).toMatch(/^concept-\d+$/);
       });

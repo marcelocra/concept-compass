@@ -9,7 +9,7 @@ import { ArrowRight } from "lucide-react";
 
 // Custom Smart Edge with smooth curves and enhanced styling
 export const CustomSmartEdge = ({
-  id,
+  id, // eslint-disable-line @typescript-eslint/no-unused-vars
   sourceX,
   sourceY,
   targetX,
@@ -19,7 +19,7 @@ export const CustomSmartEdge = ({
   style = {},
   markerEnd,
 }: EdgeProps) => {
-  const [edgePath, labelX, labelY] = getSmoothStepPath({
+  const [edgePath, labelX, labelY] = getSmoothStepPath({ // eslint-disable-line @typescript-eslint/no-unused-vars
     sourceX,
     sourceY,
     sourcePosition,

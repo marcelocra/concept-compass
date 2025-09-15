@@ -519,7 +519,7 @@ export default function MindMapCanvas({
               </div>
 
               <div className="space-y-3">
-                <h3 className="font-semibold text-xl text-foreground">Let's try that again</h3>
+                <h3 className="font-semibold text-xl text-foreground">Let&apos;s try that again</h3>
                 <p className="text-muted-foreground leading-relaxed">{error}</p>
               </div>
 
