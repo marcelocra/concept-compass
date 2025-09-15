@@ -16,9 +16,9 @@
 
 This is the active version of the project, featuring user authentication, session persistence, and a development workflow powered by Kiro.dev.
 
--   **[📦 Code at Submission]()**: TBD
--   **[➡️ Live Demo at Submission]()**: TBD
--   **[📄 View on Devpost]()**: TBD
+-   **[📦 Code at Submission](https://github.com/marcelocra/concept-compass/tree/6b716272119bd8ca0bc66bb8048c905db06fac2e)**
+-   **[➡️ Live Demo at Submission](https://concept-compass-ojbc6nn29-marcelo-almeidas-projects.vercel.app/)**
+-   **[📄 View on Devpost](https://devpost.com/software/concept-compass-5cj6by)**
 
 ### **📍 Past Milestone: OpenAI `gpt-oss` Hackathon (Sept 9-11)**
 
