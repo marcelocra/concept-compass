@@ -42,7 +42,7 @@
     -   Write unit tests for creation logic and validation
     -   _Requirements: 4.2, 4.3, 6.4_
 
--   [ ] 4.3 Create PUT /api/maps/[id] route for updating mind maps
+-   [x] 4.3 Create PUT /api/maps/[id] route for updating mind maps
 
     -   Implement route handler with ownership verification
     -   Add database update logic for graph data and metadata
