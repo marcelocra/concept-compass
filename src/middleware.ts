@@ -1,17 +1,17 @@
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 
-// Define which routes should be protected (require authentication)
-const isProtectedRoute = createRouteMatcher(["/", "/api/maps(.*)", "/api/generate(.*)"]);
+// // Define which routes should be protected (require authentication)
+// const isProtectedRoute = createRouteMatcher(["/", "/api/maps(.*)", "/api/generate(.*)"]);
 
-export default clerkMiddleware(async (auth, req) => {
-  // Protect the matched routes
-  if (isProtectedRoute(req)) {
-    await auth.protect();
-  }
-});
+// export default clerkMiddleware(async (auth, req) => {
+//   // Protect the matched routes
+//   if (isProtectedRoute(req)) {
+//     await auth.protect();
+//   }
+// });
 
 // This is the default for Clerk, per their setup docs. Doesn't block any routes.
-// export default clerkMiddleware();
+export default clerkMiddleware();
 
 export const config = {
   matcher: [
