@@ -310,7 +310,7 @@ export default function Home() {
   // Show loading while checking authentication
   if (!isLoaded) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20 flex items-center justify-center">
+      <div className="h-screen bg-gradient-to-br from-background via-background to-muted/20 flex items-center justify-center">
         <div className="flex items-center gap-2">
           <div className="w-4 h-4 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
           <span className="text-muted-foreground">Loading...</span>
@@ -322,8 +322,8 @@ export default function Home() {
   // Show sign-in message if user is not authenticated
   if (!isSignedIn) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
-        <div className="container mx-auto px-4 py-8 sm:py-16 flex items-center justify-center min-h-screen">
+      <div className="h-screen bg-gradient-to-br from-background via-background to-muted/20">
+        <div className="container mx-auto px-4 py-8 sm:py-16 flex items-center justify-center h-full">
           <Card className="w-full max-w-md shadow-xl border-0 bg-card/95 backdrop-blur-sm">
             <CardHeader className="text-center space-y-3 pb-6">
               <div className="mx-auto w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mb-2">
@@ -355,11 +355,11 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
+    <div className="h-screen bg-gradient-to-br from-background via-background to-muted/20">
       {/* Conditional rendering: show input form or mind map canvas */}
       {!mindMapData && !isLoading && !isLoadingMap ? (
         // Input form interface with enhanced styling
-        <div className="container mx-auto px-4 py-8 sm:py-16 flex items-center justify-center min-h-screen">
+        <div className="container mx-auto px-4 py-8 sm:py-16 flex items-center justify-center h-full">
           <Card className="w-full max-w-md shadow-xl border-0 bg-card/95 backdrop-blur-sm">
             <CardHeader className="text-center space-y-3 pb-6">
               <div className="mx-auto w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mb-2">
@@ -461,7 +461,7 @@ export default function Home() {
         </div>
       ) : isLoadingMap ? (
         // Loading state while checking for existing map
-        <div className="container mx-auto px-4 py-8 sm:py-16 flex items-center justify-center min-h-screen">
+        <div className="container mx-auto px-4 py-8 sm:py-16 flex items-center justify-center h-full">
           <div className="flex items-center gap-2">
             <div className="w-4 h-4 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
             <span className="text-muted-foreground">Loading your mind map...</span>

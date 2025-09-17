@@ -27,17 +27,33 @@ export default function RootLayout({
     <ClerkProvider>
       <html lang="en">
         <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-          <header className="flex justify-end items-center p-4 gap-4 h-16">
+          <header className="absolute top-0 right-0 z-50 flex justify-end items-center p-4 gap-4">
             <SignedOut>
-              <SignInButton />
+              <SignInButton>
+                <button className="bg-card/95 backdrop-blur-sm border border-border text-foreground hover:bg-accent hover:text-accent-foreground rounded-lg font-medium text-sm h-10 px-4 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] shadow-sm">
+                  Sign In
+                </button>
+              </SignInButton>
               <SignUpButton>
-                <button className="bg-[#6c47ff] text-ceramic-white rounded-full font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 cursor-pointer">
+                <button className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-lg font-medium text-sm h-10 px-4 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] shadow-sm">
                   Sign Up
                 </button>
               </SignUpButton>
             </SignedOut>
             <SignedIn>
-              <UserButton />
+              <div className="bg-card/95 backdrop-blur-sm border border-border rounded-lg p-1 shadow-sm">
+                <UserButton 
+                  appearance={{
+                    elements: {
+                      avatarBox: "w-8 h-8",
+                      userButtonPopoverCard: "bg-card border-border shadow-lg",
+                      userButtonPopoverActionButton: "text-foreground hover:bg-accent hover:text-accent-foreground",
+                      userButtonPopoverActionButtonText: "text-foreground",
+                      userButtonPopoverFooter: "hidden"
+                    }
+                  }}
+                />
+              </div>
             </SignedIn>
           </header>
           {children}
