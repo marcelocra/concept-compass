@@ -36,7 +36,6 @@ export async function POST(request: NextRequest): Promise<NextResponse<GenerateR
       } else if (result.error?.includes("empty after sanitization")) {
         statusCode = 400;
       }
-      
       return NextResponse.json({ success: false, error: result.error }, { status: statusCode });
     }
 

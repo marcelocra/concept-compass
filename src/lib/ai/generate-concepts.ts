@@ -3,6 +3,10 @@
  * This module provides direct access to concept generation without HTTP overhead
  */
 
+// Model constants
+const MODEL_PRODUCTION = "gpt-oss-120b";
+const MODEL_DEVELOPMENT = "gpt-oss-20b";
+
 interface OpenRouterResponse {
   choices: Array<{
     message: {
@@ -64,7 +68,7 @@ export async function generateConcepts(concept: string): Promise<GenerateConcept
 
     // Model selection based on environment
     const model =
-      process.env.NODE_ENV === "production" ? process.env.OPENROUTER_MODEL || "gpt-oss-120b" : "gpt-oss-20b";
+      process.env.NODE_ENV === "production" ? process.env.OPENROUTER_MODEL || MODEL_PRODUCTION : MODEL_DEVELOPMENT;
 
     // Retry logic with exponential backoff
     const maxRetries = 2;
