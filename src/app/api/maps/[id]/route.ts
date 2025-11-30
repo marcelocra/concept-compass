@@ -66,7 +66,7 @@ interface DeleteMapResponse {
 }
 
 interface RouteContext {
-  params: Promise<{ id: string }> | { id: string };
+  params: Promise<{ id: string }>;
 }
 
 export async function PUT(
@@ -84,8 +84,8 @@ export async function PUT(
       );
     }
 
-    // Get map ID from params - handle both Promise and direct access for Next.js 15
-    const params = await Promise.resolve(context.params);
+    // Get map ID from params (Next.js 15 always provides params as Promise)
+    const params = await context.params;
     const mapId = params.id;
 
     if (!mapId) {
@@ -200,8 +200,8 @@ export async function DELETE(
       );
     }
 
-    // Get map ID from params - handle both Promise and direct access for Next.js 15
-    const params = await Promise.resolve(context.params);
+    // Get map ID from params (Next.js 15 always provides params as Promise)
+    const params = await context.params;
     const mapId = params.id;
 
     if (!mapId) {
