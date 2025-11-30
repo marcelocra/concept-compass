@@ -5,22 +5,22 @@ import { vi, describe, it, expect, beforeEach } from "vitest";
 process.env.DATABASE_URL = "postgresql://test:test@localhost:5432/test";
 
 // Mock Clerk auth
-const mockAuth = vi.fn();
 vi.mock("@clerk/nextjs/server", () => ({
-  auth: mockAuth,
+  auth: vi.fn(),
 }));
 
 // Mock database
-const mockSelect = vi.fn();
-const mockUpdate = vi.fn();
-const mockDelete = vi.fn();
-
 vi.mock("@/lib/db", () => ({
   db: {
-    select: mockSelect,
-    update: mockUpdate,
-    delete: mockDelete,
+    select: vi.fn(),
+    update: vi.fn(),
+    delete: vi.fn(),
   },
+}));
+
+// Mock schema
+vi.mock("@/lib/db/schema", () => ({
+  mindMaps: "mockMindMapsTable",
 }));
 
 // Mock drizzle-orm functions
@@ -29,8 +29,10 @@ vi.mock("drizzle-orm", () => ({
   and: vi.fn(),
 }));
 
-// Import after mocking
-import { PUT, DELETE } from "./route";
+// Dynamic imports after mocking
+const { PUT, DELETE } = await import("./route");
+const { auth } = await import("@clerk/nextjs/server");
+const { db } = await import("@/lib/db");
 
 describe("/api/maps/[id] PUT Route", () => {
   const mockUserId = "user_test123";
@@ -53,9 +55,9 @@ describe("/api/maps/[id] PUT Route", () => {
     vi.clearAllMocks();
     
     // Setup default successful mocks
-    mockAuth.mockResolvedValue({ userId: mockUserId });
+    vi.mocked(auth).mockResolvedValue({ userId: mockUserId });
     
-    mockSelect.mockReturnValue({
+    vi.mocked(db.select).mockReturnValue({
       from: vi.fn().mockReturnValue({
         where: vi.fn().mockReturnValue({
           limit: vi.fn().mockResolvedValue([
@@ -72,7 +74,7 @@ describe("/api/maps/[id] PUT Route", () => {
       }),
     });
 
-    mockUpdate.mockReturnValue({
+    vi.mocked(db.update).mockReturnValue({
       set: vi.fn().mockReturnValue({
         where: vi.fn().mockReturnValue({
           returning: vi.fn().mockResolvedValue([
@@ -92,7 +94,7 @@ describe("/api/maps/[id] PUT Route", () => {
 
   describe("Authentication", () => {
     it("should return 401 when user is not authenticated", async () => {
-      mockAuth.mockResolvedValue({ userId: null });
+      vi.mocked(auth).mockResolvedValue({ userId: null });
 
       const request = new NextRequest("http://localhost:3000/api/maps/test", {
         method: "PUT",
@@ -207,7 +209,7 @@ describe("/api/maps/[id] PUT Route", () => {
   describe("Ownership Verification", () => {
     it("should return 404 when mind map does not exist", async () => {
       // Mock empty result for map lookup
-      mockSelect.mockReturnValue({
+      vi.mocked(db.select).mockReturnValue({
         from: vi.fn().mockReturnValue({
           where: vi.fn().mockReturnValue({
             limit: vi.fn().mockResolvedValue([]), // Empty array = not found
@@ -250,7 +252,7 @@ describe("/api/maps/[id] PUT Route", () => {
     });
 
     it("should handle database connection errors", async () => {
-      mockSelect.mockReturnValue({
+      vi.mocked(db.select).mockReturnValue({
         from: vi.fn().mockReturnValue({
           where: vi.fn().mockReturnValue({
             limit: vi.fn().mockRejectedValue(new Error("connection failed")),
@@ -283,9 +285,9 @@ describe("/api/maps/[id] DELETE Route", () => {
     vi.clearAllMocks();
     
     // Setup default successful mocks
-    mockAuth.mockResolvedValue({ userId: mockUserId });
+    vi.mocked(auth).mockResolvedValue({ userId: mockUserId });
     
-    mockSelect.mockReturnValue({
+    vi.mocked(db.select).mockReturnValue({
       from: vi.fn().mockReturnValue({
         where: vi.fn().mockReturnValue({
           limit: vi.fn().mockResolvedValue([
@@ -302,14 +304,14 @@ describe("/api/maps/[id] DELETE Route", () => {
       }),
     });
 
-    mockDelete.mockReturnValue({
+    vi.mocked(db.delete).mockReturnValue({
       where: vi.fn().mockResolvedValue({ rowCount: 1 }),
     });
   });
 
   describe("Authentication", () => {
     it("should return 401 when user is not authenticated", async () => {
-      mockAuth.mockResolvedValue({ userId: null });
+      vi.mocked(auth).mockResolvedValue({ userId: null });
 
       const request = new NextRequest("http://localhost:3000/api/maps/test", {
         method: "DELETE",
@@ -354,7 +356,7 @@ describe("/api/maps/[id] DELETE Route", () => {
   describe("Ownership Verification", () => {
     it("should return 404 when mind map does not exist", async () => {
       // Mock empty result for map lookup
-      mockSelect.mockReturnValue({
+      vi.mocked(db.select).mockReturnValue({
         from: vi.fn().mockReturnValue({
           where: vi.fn().mockReturnValue({
             limit: vi.fn().mockResolvedValue([]), // Empty array = not found
@@ -390,7 +392,7 @@ describe("/api/maps/[id] DELETE Route", () => {
     });
 
     it("should handle database connection errors", async () => {
-      mockSelect.mockReturnValue({
+      vi.mocked(db.select).mockReturnValue({
         from: vi.fn().mockReturnValue({
           where: vi.fn().mockReturnValue({
             limit: vi.fn().mockRejectedValue(new Error("connection failed")),
