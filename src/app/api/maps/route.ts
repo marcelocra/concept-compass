@@ -184,14 +184,20 @@ export async function POST(request: NextRequest): Promise<NextResponse<CreateMap
     const graphData = await generateInitialMindMap(initialConcept);
 
     // Insert new mind map into database
+    // Truncate name to ensure it fits within limits (though validation should catch this,
+    // safe truncation prevents DB errors if schema changes)
     const [newMindMap] = await db
       .insert(mindMaps)
       .values({
         userId,
-        name,
+        name: name.slice(0, 100),
         graphData,
       })
       .returning();
+
+    if (!newMindMap) {
+      throw new Error("Failed to insert mind map into database");
+    }
 
     return NextResponse.json({
       success: true,

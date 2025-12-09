@@ -152,13 +152,17 @@ export default function Home() {
       setError(null);
 
       try {
+        // Create a name and ensure it fits within the API limit (100 chars)
+        const mapName = `Mind Map: ${concept}`;
+        const truncatedName = mapName.length > 100 ? mapName.substring(0, 100) : mapName;
+
         const response = await fetch("/api/maps", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            name: `Mind Map: ${concept}`,
+            name: truncatedName,
             initialConcept: concept,
           }),
         });
