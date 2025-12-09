@@ -360,8 +360,43 @@ describe("/api/maps POST", () => {
       expect(data.map).toEqual(mockCreatedMap);
     });
 
-    it("should handle database connection errors", async () => {
+    it("should retry database insertion on failure and succeed", async () => {
+      // Fail 2 times, then succeed
+      const mockCreatedMap = {
+        id: "map_created123",
+        userId: "user_test123",
+        name: "Created Mind Map",
+        graphData: {},
+        createdAt: "2024-01-01T12:00:00.000Z",
+        updatedAt: "2024-01-01T12:00:00.000Z",
+      };
+
+      const returningMock = vi.mocked(db.insert)().values().returning;
+
+      returningMock
+        .mockRejectedValueOnce(new Error("connection failed"))
+        .mockRejectedValueOnce(new Error("connection failed"))
+        .mockResolvedValueOnce([mockCreatedMap]);
+
+      const request = createMockRequest({
+        name: "Test Mind Map",
+        initialConcept: "Test Concept",
+      });
+
+      const response = await POST(request);
+      const data = await response.json();
+
+      expect(response.status).toBe(200);
+      expect(data.success).toBe(true);
+      expect(returningMock).toHaveBeenCalledTimes(3);
+    });
+
+    it("should handle database connection errors after retries", async () => {
+      // Fail 3 times (initial + 2 retries)
       vi.mocked(db.insert)().values().returning.mockRejectedValue(new Error("connection failed"));
+
+      // Clear the call made during setup above
+      vi.mocked(db.insert).mockClear();
 
       const request = createMockRequest({
         name: "Test Mind Map",
@@ -374,6 +409,7 @@ describe("/api/maps POST", () => {
       expect(response.status).toBe(503);
       expect(data.success).toBe(false);
       expect(data.error).toBe("Database connection failed. Please try again.");
+      expect(db.insert).toHaveBeenCalledTimes(3);
     });
 
     it("should handle database constraint errors", async () => {
