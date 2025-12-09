@@ -471,7 +471,7 @@ export default function Home() {
         // Mind map canvas interface with enhanced styling
         <div className="h-screen flex flex-col bg-gradient-to-br from-background via-background to-muted/10">
           {/* Header with current concept and controls */}
-          <div className="border-b bg-card/95 backdrop-blur-sm px-4 sm:px-6 py-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 shadow-sm">
+          <div className="border-b bg-card/95 backdrop-blur-sm pl-4 sm:pl-6 pr-20 sm:pr-24 py-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 shadow-sm">
             <div className="flex items-center space-x-3 sm:space-x-4 min-w-0 flex-1">
               <div className="flex items-center gap-2">
                 <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
