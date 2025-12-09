@@ -4,6 +4,7 @@ import { z } from "zod";
 import { db } from "@/lib/db";
 import { mindMaps, type GraphData, type MindMap } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
+import { generateConcepts } from "@/lib/ai/generate-concepts";
 
 // Request validation schema
 const createMapSchema = z.object({
@@ -39,31 +40,16 @@ interface GetMapResponse {
 }
 
 /**
- * Generates initial mind map content using the existing AI generation logic
- * This reuses the same AI generation functionality from /api/generate
+ * Generates initial mind map content using the shared AI generation logic
+ * This calls the generateConcepts function directly without HTTP overhead
  */
 async function generateInitialMindMap(concept: string): Promise<GraphData> {
   try {
-    // Call the existing generate API internally
-    const generateResponse = await fetch(
-      `${process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"}/api/generate`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ concept }),
-      }
-    );
+    // Call the shared generate concepts function directly
+    const generateResult = await generateConcepts(concept);
 
-    if (!generateResponse.ok) {
-      throw new Error("Failed to generate initial concepts");
-    }
-
-    const generateData = await generateResponse.json();
-
-    if (!generateData.success || !generateData.concepts) {
-      throw new Error("Invalid response from generate API");
+    if (!generateResult.success || !generateResult.concepts) {
+      throw new Error(generateResult.error || "Failed to generate concepts");
     }
 
     // Create React Flow nodes and edges from the generated concepts
@@ -85,9 +71,9 @@ async function generateInitialMindMap(concept: string): Promise<GraphData> {
     }> = [];
 
     // Add concept nodes around the center
-    generateData.concepts.forEach((conceptText: string, index: number) => {
+    generateResult.concepts.forEach((conceptText: string, index: number) => {
       const nodeId = `concept-${index}`;
-      const angle = (index * 2 * Math.PI) / generateData.concepts.length;
+      const angle = (index * 2 * Math.PI) / generateResult.concepts!.length;
       const radius = 200;
 
       // Ensure we don't place nodes at exactly (0,0) by adding a small offset for the first node

@@ -10,6 +10,7 @@ vi.mock("@clerk/nextjs/server", () => ({
 vi.mock("@/lib/db", () => ({
   db: {
     insert: vi.fn(),
+    select: vi.fn(),
   },
 }));
 
@@ -17,14 +18,16 @@ vi.mock("@/lib/db/schema", () => ({
   mindMaps: "mockMindMapsTable",
 }));
 
+// Mock the generateConcepts function
+vi.mock("@/lib/ai/generate-concepts", () => ({
+  generateConcepts: vi.fn(),
+}));
+
 // Import after mocks are set up
 const { POST } = await import("./route");
 const { auth } = await import("@clerk/nextjs/server");
 const { db } = await import("@/lib/db");
-
-// Mock fetch for internal API calls
-const mockFetch = vi.fn();
-global.fetch = mockFetch;
+const { generateConcepts } = await import("@/lib/ai/generate-concepts");
 
 // Mock environment variables
 const mockEnv = {
@@ -62,13 +65,10 @@ describe("/api/maps POST", () => {
       }),
     });
 
-    // Default successful AI generation
-    mockFetch.mockResolvedValue({
-      ok: true,
-      json: vi.fn().mockResolvedValue({
-        success: true,
-        concepts: ["Concept 1", "Concept 2", "Concept 3", "Concept 4", "Concept 5"],
-      }),
+    // Default successful AI generation using the shared function
+    vi.mocked(generateConcepts).mockResolvedValue({
+      success: true,
+      concepts: ["Concept 1", "Concept 2", "Concept 3", "Concept 4", "Concept 5"],
     });
   });
 
@@ -225,7 +225,7 @@ describe("/api/maps POST", () => {
   });
 
   describe("AI generation integration", () => {
-    it("should call the generate API with the initial concept", async () => {
+    it("should call the generateConcepts function with the initial concept", async () => {
       const request = createMockRequest({
         name: "Test Mind Map",
         initialConcept: "Sustainable Farming",
@@ -233,26 +233,14 @@ describe("/api/maps POST", () => {
 
       await POST(request);
 
-      expect(mockFetch).toHaveBeenCalledWith(
-        "http://localhost:3000/api/generate",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ concept: "Sustainable Farming" }),
-        }
-      );
+      expect(generateConcepts).toHaveBeenCalledWith("Sustainable Farming");
     });
 
     it("should create mind map with generated concepts", async () => {
       const generatedConcepts = ["Vertical Farming", "Aquaponics", "Soil Health", "Water Conservation"];
-      mockFetch.mockResolvedValue({
-        ok: true,
-        json: vi.fn().mockResolvedValue({
-          success: true,
-          concepts: generatedConcepts,
-        }),
+      vi.mocked(generateConcepts).mockResolvedValue({
+        success: true,
+        concepts: generatedConcepts,
       });
 
       const request = createMockRequest({
@@ -277,9 +265,9 @@ describe("/api/maps POST", () => {
     });
 
     it("should handle AI generation failure gracefully", async () => {
-      mockFetch.mockResolvedValue({
-        ok: false,
-        status: 500,
+      vi.mocked(generateConcepts).mockResolvedValue({
+        success: false,
+        error: "AI service is temporarily unavailable. Please try again.",
       });
 
       const request = createMockRequest({
@@ -301,12 +289,9 @@ describe("/api/maps POST", () => {
     });
 
     it("should handle invalid AI response gracefully", async () => {
-      mockFetch.mockResolvedValue({
-        ok: true,
-        json: vi.fn().mockResolvedValue({
-          success: false,
-          error: "AI service error",
-        }),
+      vi.mocked(generateConcepts).mockResolvedValue({
+        success: false,
+        error: "AI service error",
       });
 
       const request = createMockRequest({
