@@ -183,15 +183,40 @@ export async function POST(request: NextRequest): Promise<NextResponse<CreateMap
     // Generate initial mind map content using existing AI generation
     const graphData = await generateInitialMindMap(initialConcept);
 
-    // Insert new mind map into database
-    const [newMindMap] = await db
-      .insert(mindMaps)
-      .values({
-        userId,
-        name,
-        graphData,
-      })
-      .returning();
+    // Insert new mind map into database with retry logic for cold connections
+    // Truncate name to ensure it fits within limits (though validation should catch this,
+    // safe truncation prevents DB errors if schema changes)
+    let newMindMap;
+    const maxRetries = 2;
+
+    for (let attempt = 0; attempt <= maxRetries; attempt++) {
+      try {
+        const result = await db
+          .insert(mindMaps)
+          .values({
+            userId,
+            name: name.slice(0, 100),
+            graphData,
+          })
+          .returning();
+
+        newMindMap = result[0];
+        break; // Success, exit loop
+      } catch (err) {
+        console.warn(`Database insert failed on attempt ${attempt + 1}:`, err);
+
+        // If this was the last attempt, rethrow
+        if (attempt === maxRetries) throw err;
+
+        // Wait before retry (exponential backoff: 500ms, 1000ms)
+        const delay = 500 * Math.pow(2, attempt);
+        await new Promise(resolve => setTimeout(resolve, delay));
+      }
+    }
+
+    if (!newMindMap) {
+      throw new Error("Failed to insert mind map into database after retries");
+    }
 
     return NextResponse.json({
       success: true,
