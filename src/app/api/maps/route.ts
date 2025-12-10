@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { z } from "zod";
 import { db } from "@/lib/db";
+import { withDbRetry } from "@/lib/db/utils";
 import { mindMaps, type GraphData, type MindMap } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { generateConcepts } from "@/lib/ai/generate-concepts";
@@ -134,7 +135,9 @@ export async function GET(): Promise<NextResponse<GetMapResponse>> {
     }
 
     // Query database for the first mind map found for the user
-    const userMaps = await db.select().from(mindMaps).where(eq(mindMaps.userId, userId)).limit(1);
+    const userMaps = await withDbRetry(() =>
+      db.select().from(mindMaps).where(eq(mindMaps.userId, userId)).limit(1)
+    );
 
     // Return the first map or null if no maps found
     const map = userMaps.length > 0 ? {
@@ -183,15 +186,25 @@ export async function POST(request: NextRequest): Promise<NextResponse<CreateMap
     // Generate initial mind map content using existing AI generation
     const graphData = await generateInitialMindMap(initialConcept);
 
-    // Insert new mind map into database
-    const [newMindMap] = await db
-      .insert(mindMaps)
-      .values({
-        userId,
-        name,
-        graphData,
-      })
-      .returning();
+    // Insert new mind map into database with retry logic for cold connections
+    // Truncate name to ensure it fits within limits (though validation should catch this,
+    // safe truncation prevents DB errors if schema changes)
+    const result = await withDbRetry(() =>
+      db
+        .insert(mindMaps)
+        .values({
+          userId,
+          name: name.slice(0, 100),
+          graphData,
+        })
+        .returning()
+    );
+
+    const newMindMap = result[0];
+
+    if (!newMindMap) {
+      throw new Error("Failed to insert mind map into database after retries");
+    }
 
     return NextResponse.json({
       success: true,
