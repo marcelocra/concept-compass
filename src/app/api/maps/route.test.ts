@@ -520,7 +520,7 @@ describe("/api/maps POST", () => {
               }]),
           }),
         }),
-      } as any);
+      } as unknown as ReturnType<typeof db.select>);
 
       const response = await GET();
       const data = await response.json();

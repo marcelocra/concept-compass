@@ -8,7 +8,7 @@ export async function withDbRetry<T>(
   maxRetries: number = 3,
   baseDelay: number = 500
 ): Promise<T> {
-  let lastError: any;
+  let lastError: unknown;
 
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {
