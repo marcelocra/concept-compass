@@ -24,7 +24,7 @@ vi.mock("@/lib/ai/generate-concepts", () => ({
 }));
 
 // Import after mocks are set up
-const { POST } = await import("./route");
+const { POST, GET } = await import("./route");
 const { auth } = await import("@clerk/nextjs/server");
 const { db } = await import("@/lib/db");
 const { generateConcepts } = await import("@/lib/ai/generate-concepts");
@@ -392,7 +392,7 @@ describe("/api/maps POST", () => {
     });
 
     it("should handle database connection errors after retries", async () => {
-      // Fail 3 times (initial + 2 retries)
+      // Fail 4 times (initial + 3 retries from utility default)
       vi.mocked(db.insert)().values().returning.mockRejectedValue(new Error("connection failed"));
 
       // Clear the call made during setup above
@@ -409,7 +409,7 @@ describe("/api/maps POST", () => {
       expect(response.status).toBe(503);
       expect(data.success).toBe(false);
       expect(data.error).toBe("Database connection failed. Please try again.");
-      expect(db.insert).toHaveBeenCalledTimes(3);
+      expect(db.insert).toHaveBeenCalledTimes(4);
     });
 
     it("should handle database constraint errors", async () => {
@@ -500,6 +500,34 @@ describe("/api/maps POST", () => {
 
       const insertCall = vi.mocked(db.insert)().values.mock.calls[0][0];
       expect(insertCall.graphData.centralConcept).toBe("My Central Concept");
+    });
+  });
+
+  describe("GET /api/maps", () => {
+    it("should retry database query on failure", async () => {
+      vi.mocked(db.select).mockReturnValue({
+        from: vi.fn().mockReturnValue({
+          where: vi.fn().mockReturnValue({
+            limit: vi.fn()
+              .mockRejectedValueOnce(new Error("connection failed"))
+              .mockResolvedValueOnce([{
+                id: "map_test123",
+                userId: "user_test123",
+                name: "Test Mind Map",
+                graphData: {},
+                createdAt: new Date(),
+                updatedAt: new Date(),
+              }]),
+          }),
+        }),
+      } as unknown as ReturnType<typeof db.select>);
+
+      const response = await GET();
+      const data = await response.json();
+
+      expect(response.status).toBe(200);
+      expect(data.success).toBe(true);
+      // It should have succeeded on the second try
     });
   });
 

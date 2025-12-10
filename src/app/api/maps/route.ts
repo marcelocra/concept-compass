@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { z } from "zod";
 import { db } from "@/lib/db";
+import { withDbRetry } from "@/lib/db/utils";
 import { mindMaps, type GraphData, type MindMap } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { generateConcepts } from "@/lib/ai/generate-concepts";
@@ -134,7 +135,9 @@ export async function GET(): Promise<NextResponse<GetMapResponse>> {
     }
 
     // Query database for the first mind map found for the user
-    const userMaps = await db.select().from(mindMaps).where(eq(mindMaps.userId, userId)).limit(1);
+    const userMaps = await withDbRetry(() =>
+      db.select().from(mindMaps).where(eq(mindMaps.userId, userId)).limit(1)
+    );
 
     // Return the first map or null if no maps found
     const map = userMaps.length > 0 ? {
@@ -186,33 +189,18 @@ export async function POST(request: NextRequest): Promise<NextResponse<CreateMap
     // Insert new mind map into database with retry logic for cold connections
     // Truncate name to ensure it fits within limits (though validation should catch this,
     // safe truncation prevents DB errors if schema changes)
-    let newMindMap;
-    const maxRetries = 2;
+    const result = await withDbRetry(() =>
+      db
+        .insert(mindMaps)
+        .values({
+          userId,
+          name: name.slice(0, 100),
+          graphData,
+        })
+        .returning()
+    );
 
-    for (let attempt = 0; attempt <= maxRetries; attempt++) {
-      try {
-        const result = await db
-          .insert(mindMaps)
-          .values({
-            userId,
-            name: name.slice(0, 100),
-            graphData,
-          })
-          .returning();
-
-        newMindMap = result[0];
-        break; // Success, exit loop
-      } catch (err) {
-        console.warn(`Database insert failed on attempt ${attempt + 1}:`, err);
-
-        // If this was the last attempt, rethrow
-        if (attempt === maxRetries) throw err;
-
-        // Wait before retry (exponential backoff: 500ms, 1000ms)
-        const delay = 500 * Math.pow(2, attempt);
-        await new Promise(resolve => setTimeout(resolve, delay));
-      }
-    }
+    const newMindMap = result[0];
 
     if (!newMindMap) {
       throw new Error("Failed to insert mind map into database after retries");

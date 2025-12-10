@@ -108,7 +108,7 @@ const RelatedNode = ({ data, selected }: NodeProps) => {
   );
 };
 // --- Enhanced Custom Edge - REVERTIDO para conexão simples ---
-const AnimatedEdge = ({ id, sourceX, sourceY, targetX, targetY, style }: EdgeProps) => {
+const AnimatedEdge = ({ sourceX, sourceY, targetX, targetY, style }: EdgeProps) => {
   // Usando a forma anterior simples que funcionava
   const [edgePath] = getSmoothStepPath({
     sourceX,
@@ -205,7 +205,7 @@ const generateAdvancedLayout = (centralConcept: string, relatedConcepts: string[
     };
   });
 
-  const edges: Edge[] = relatedNodes.map((node, index) => ({
+  const edges: Edge[] = relatedNodes.map((node) => ({
     id: `edge-central-${node.id}`,
     source: "central",
     target: node.id,
@@ -235,7 +235,6 @@ export interface MindMapCanvasProps {
 
 // --- God-Tier Mind Map Component ---
 export default function MindMapCanvas({
-  concept: _concept,
   mindMapData,
   onNodeClick,
   isLoading = false,
@@ -248,7 +247,6 @@ export default function MindMapCanvas({
   const [mindMapCache, setMindMapCache] = useState<Record<string, MindMapData>>({});
   const [navigationHistory, setNavigationHistory] = useState<string[]>([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
-  const [currentConcept, setCurrentConcept] = useState<string>("");
 
   const generateNodesAndEdges = useCallback((data: MindMapData) => {
     return generateAdvancedLayout(data.centralConcept, data.relatedConcepts);
@@ -261,9 +259,6 @@ export default function MindMapCanvas({
         ...prev,
         [mindMapData.centralConcept]: mindMapData,
       }));
-
-      // Update current concept
-      setCurrentConcept(mindMapData.centralConcept);
 
       // Generate nodes/edges
       const { nodes: newNodes, edges: newEdges } = generateNodesAndEdges(mindMapData);
@@ -296,7 +291,6 @@ export default function MindMapCanvas({
         const { nodes: newNodes, edges: newEdges } = generateNodesAndEdges(cachedData);
         setNodes(newNodes);
         setEdges(newEdges);
-        setCurrentConcept(concept);
       }
     },
     [mindMapCache, generateNodesAndEdges, setNodes, setEdges]
