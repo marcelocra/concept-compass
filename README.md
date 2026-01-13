@@ -99,8 +99,9 @@ This submission features user authentication, session persistence, and a develop
 
 The initial MVP was a stateless, client-side focused application built in a 48-hour sprint to demonstrate the core mind-mapping experience with `gpt-oss` models.
 
--->
 
   - **[📦 Code at Submission](https://github.com/marcelocra/concept-compass/tree/edd2fe74ad9df895b391e674a80f35597a45bb44)**
   - **[➡️ Live Demo at Submission](https://concept-compass-i2oqfkahs-marcelo-almeidas-projects.vercel.app)**
   - **[📄 View on Devpost](https://devpost.com/software/concept-compass)**
+
+-->
