@@ -8,8 +8,10 @@
 [](https://tailwindcss.com/)
 [](https://vercel.com)
 
+<!--
 > [\!NOTE]
 > **Project Status:** This project is an active submission for the **[Kiro.dev Hackathon](https://devpost.com/software/concept-compass-5cj6by)**, evolving from an initial MVP created for the **[OpenAI `gpt-oss` Hackathon](https://www.google.com/search?q=%5Bhttps://devpost.com/software/concept-compass%5D\(https://devpost.com/software/concept-compass\))**. The full submission history is detailed at the end of this document.
+-->
 
 ## ✨ What It Does
 
